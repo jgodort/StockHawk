@@ -1,7 +1,11 @@
 package com.sam_chordas.android.stockhawk.rest;
 
 import android.content.ContentProviderOperation;
+import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.sam_chordas.android.stockhawk.data.QuoteColumns;
 import com.sam_chordas.android.stockhawk.data.QuoteProvider;
@@ -21,7 +25,7 @@ public class Utils {
 
     public static boolean showPercent = true;
 
-    public static ArrayList quoteJsonToContentVals(String JSON) {
+    public static ArrayList quoteJsonToContentVals(String JSON, Context context) {
         ArrayList<ContentProviderOperation> batchOperations = new ArrayList<>();
         JSONObject jsonObject = null;
         JSONArray resultsArray = null;
@@ -33,14 +37,14 @@ public class Utils {
                 if (count == 1) {
                     jsonObject = jsonObject.getJSONObject("results")
                             .getJSONObject("quote");
-                    batchOperations.add(buildBatchOperation(jsonObject));
+                    batchOperations.add(buildBatchOperation(jsonObject, context));
                 } else {
                     resultsArray = jsonObject.getJSONObject("results").getJSONArray("quote");
 
                     if (resultsArray != null && resultsArray.length() != 0) {
                         for (int i = 0; i < resultsArray.length(); i++) {
                             jsonObject = resultsArray.getJSONObject(i);
-                            batchOperations.add(buildBatchOperation(jsonObject));
+                            batchOperations.add(buildBatchOperation(jsonObject, context));
                         }
                     }
                 }
@@ -73,26 +77,60 @@ public class Utils {
         return change;
     }
 
-    public static ContentProviderOperation buildBatchOperation(JSONObject jsonObject) {
+    public static ContentProviderOperation buildBatchOperation(JSONObject jsonObject, Context context) {
         ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(
                 QuoteProvider.Quotes.CONTENT_URI);
         try {
+            String symbol = jsonObject.getString("symbol");
+            String bid = jsonObject.getString("Bid");
+            String percentChange = jsonObject.getString("ChangeinPercent");
             String change = jsonObject.getString("Change");
-            builder.withValue(QuoteColumns.SYMBOL, jsonObject.getString("symbol"));
-            builder.withValue(QuoteColumns.BIDPRICE, truncateBidPrice(jsonObject.getString("Bid")));
-            builder.withValue(QuoteColumns.PERCENT_CHANGE, truncateChange(
-                    jsonObject.getString("ChangeinPercent"), true));
-            builder.withValue(QuoteColumns.CHANGE, truncateChange(change, false));
-            builder.withValue(QuoteColumns.ISCURRENT, 1);
-            if (change.charAt(0) == '-') {
-                builder.withValue(QuoteColumns.ISUP, 0);
+
+            if (!symbol.equals("null")&&
+                    !symbol.isEmpty() &&
+                    !bid.equals("null") &&
+                    !bid.isEmpty() &&
+                    !percentChange.equals("null") &&
+                    !percentChange.isEmpty() &&
+                    !change.equals("null") &&
+                    !change.isEmpty()) {
+
+                builder.withValue(QuoteColumns.SYMBOL, symbol);
+                builder.withValue(QuoteColumns.BIDPRICE, truncateBidPrice(bid));
+                builder.withValue(QuoteColumns.PERCENT_CHANGE,
+                        truncateChange(percentChange, true));
+                builder.withValue(QuoteColumns.CHANGE, truncateChange(change, false));
+                builder.withValue(QuoteColumns.ISCURRENT, 1);
+
+                if (change.charAt(0) == '-') {
+                    builder.withValue(QuoteColumns.ISUP, 0);
+                } else {
+                    builder.withValue(QuoteColumns.ISUP, 1);
+                }
             } else {
-                builder.withValue(QuoteColumns.ISUP, 1);
+                launchToastMessageOnMainThread(context);
             }
 
         } catch (JSONException e) {
             e.printStackTrace();
         }
         return builder.build();
+    }
+
+    /**
+     * Method that allow to show a Toast Message on the Main thread.
+     * <p>
+     * Source: https://discussions.udacity.com/t/stock-not-existing-toast-doesnt-show/180386
+     *
+     * @param context
+     */
+    public static void launchToastMessageOnMainThread(final Context context) {
+        Handler handler = new Handler(Looper.getMainLooper());
+        handler.post(new Runnable() {
+            public void run() {
+                Toast.makeText(context, "The Stock quote does not exist.",
+                        Toast.LENGTH_LONG).show();
+            }
+        });
     }
 }
