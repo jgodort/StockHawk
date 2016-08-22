@@ -10,4 +10,6 @@
     <string name="input_hint">FB</string>
     <string name="input_prefill"></string>
     <string name="network_toast">Uh-oh! This app requires an internet connection</string>
+    <string name="no_network_available">No Internet connection!! Check your connection and refresh.</string>
+    <string name="no_stocks_display">Tap on + button to add your favorites Stocks.</string>
 </resources>
