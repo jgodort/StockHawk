@@ -4,17 +4,11 @@ import android.content.ContentProviderOperation;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
-import android.util.Log;
 import android.widget.Toast;
 
 import com.sam_chordas.android.stockhawk.data.QuoteColumns;
 import com.sam_chordas.android.stockhawk.data.QuoteProvider;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.util.ArrayList;
+import com.sam_chordas.android.stockhawk.rest.model.Quote;
 
 /**
  * Created by sam_chordas on 10/8/15.
@@ -25,35 +19,6 @@ public class Utils {
 
     public static boolean showPercent = true;
 
-    public static ArrayList quoteJsonToContentVals(String JSON, Context context) {
-        ArrayList<ContentProviderOperation> batchOperations = new ArrayList<>();
-        JSONObject jsonObject = null;
-        JSONArray resultsArray = null;
-        try {
-            jsonObject = new JSONObject(JSON);
-            if (jsonObject != null && jsonObject.length() != 0) {
-                jsonObject = jsonObject.getJSONObject("query");
-                int count = Integer.parseInt(jsonObject.getString("count"));
-                if (count == 1) {
-                    jsonObject = jsonObject.getJSONObject("results")
-                            .getJSONObject("quote");
-                    batchOperations.add(buildBatchOperation(jsonObject, context));
-                } else {
-                    resultsArray = jsonObject.getJSONObject("results").getJSONArray("quote");
-
-                    if (resultsArray != null && resultsArray.length() != 0) {
-                        for (int i = 0; i < resultsArray.length(); i++) {
-                            jsonObject = resultsArray.getJSONObject(i);
-                            batchOperations.add(buildBatchOperation(jsonObject, context));
-                        }
-                    }
-                }
-            }
-        } catch (JSONException e) {
-            Log.e(LOG_TAG, "String to JSON failed: " + e);
-        }
-        return batchOperations;
-    }
 
     public static String truncateBidPrice(String bidPrice) {
         bidPrice = String.format("%.2f", Float.parseFloat(bidPrice));
@@ -77,43 +42,40 @@ public class Utils {
         return change;
     }
 
-    public static ContentProviderOperation buildBatchOperation(JSONObject jsonObject, Context context) {
+    public static ContentProviderOperation buildBatchOperation(Quote quote, Context context) {
+
         ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(
                 QuoteProvider.Quotes.CONTENT_URI);
-        try {
-            String symbol = jsonObject.getString("symbol");
-            String bid = jsonObject.getString("Bid");
-            String percentChange = jsonObject.getString("ChangeinPercent");
-            String change = jsonObject.getString("Change");
 
-            if (!symbol.equals("null")&&
-                    !symbol.isEmpty() &&
-                    !bid.equals("null") &&
-                    !bid.isEmpty() &&
-                    !percentChange.equals("null") &&
-                    !percentChange.isEmpty() &&
-                    !change.equals("null") &&
-                    !change.isEmpty()) {
+        String symbol = quote.getSymbol();
+        String bid = quote.getBid();
+        String percentChange = quote.getPercentChange();
+        String change = quote.getChange();
 
-                builder.withValue(QuoteColumns.SYMBOL, symbol);
-                builder.withValue(QuoteColumns.BIDPRICE, truncateBidPrice(bid));
-                builder.withValue(QuoteColumns.PERCENT_CHANGE,
-                        truncateChange(percentChange, true));
-                builder.withValue(QuoteColumns.CHANGE, truncateChange(change, false));
-                builder.withValue(QuoteColumns.ISCURRENT, 1);
+        if (null != symbol &&
+                !symbol.isEmpty() &&
+                null != percentChange &&
+                !percentChange.isEmpty() &&
+                null != change &&
+                !change.isEmpty()) {
 
-                if (change.charAt(0) == '-') {
-                    builder.withValue(QuoteColumns.ISUP, 0);
-                } else {
-                    builder.withValue(QuoteColumns.ISUP, 1);
-                }
+            builder.withValue(QuoteColumns.SYMBOL, symbol);
+            builder.withValue(QuoteColumns.BIDPRICE, truncateBidPrice(bid));
+            builder.withValue(QuoteColumns.PERCENT_CHANGE,
+                    truncateChange(percentChange, true));
+            builder.withValue(QuoteColumns.CHANGE, truncateChange(change, false));
+            builder.withValue(QuoteColumns.ISCURRENT, 1);
+
+            if (change.charAt(0) == '-') {
+                builder.withValue(QuoteColumns.ISUP, 0);
             } else {
-                launchToastMessageOnMainThread(context);
+                builder.withValue(QuoteColumns.ISUP, 1);
             }
-
-        } catch (JSONException e) {
-            e.printStackTrace();
+        } else {
+            launchToastMessageOnMainThread(context);
         }
+
+
         return builder.build();
     }
 
