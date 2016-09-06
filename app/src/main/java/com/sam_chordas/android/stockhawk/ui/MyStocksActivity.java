@@ -28,8 +28,7 @@ import com.google.android.gms.gcm.PeriodicTask;
 import com.google.android.gms.gcm.Task;
 import com.melnykov.fab.FloatingActionButton;
 import com.sam_chordas.android.stockhawk.R;
-import com.sam_chordas.android.stockhawk.data.QuoteColumns;
-import com.sam_chordas.android.stockhawk.data.QuoteProvider;
+import com.sam_chordas.android.stockhawk.data.StockQuoteContract;
 import com.sam_chordas.android.stockhawk.rest.QuoteCursorAdapter;
 import com.sam_chordas.android.stockhawk.rest.RecyclerViewItemClickListener;
 import com.sam_chordas.android.stockhawk.rest.Utils;
@@ -41,6 +40,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 
 public class MyStocksActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
+    public static final String SELECTED_STOCKQUOTE = "S_STQ";
 
     /**
      * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
@@ -97,6 +97,11 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
                     public void onItemClick(View v, int position) {
                         //TODO:
                         // do something on item click
+
+                        Intent intent = new Intent(mContext, DetailActivity.class);
+                        intent.putExtra(SELECTED_STOCKQUOTE, mCursorAdapter.getStockId(position));
+
+                        mContext.startActivity(intent);
                     }
                 }));
         recyclerView.setAdapter(mCursorAdapter);
@@ -116,8 +121,9 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
                                 public void onInput(MaterialDialog dialog, CharSequence input) {
                                     // On FAB click, receive user input. Make sure the stock doesn't already exist
                                     // in the DB and proceed accordingly
-                                    Cursor c = getContentResolver().query(QuoteProvider.Quotes.CONTENT_URI,
-                                            new String[]{QuoteColumns.SYMBOL}, QuoteColumns.SYMBOL + "= ?",
+                                    Cursor c = getContentResolver().query(StockQuoteContract.StockQuoteEntry.CONTENT_URI,
+                                            new String[]{StockQuoteContract.StockQuoteEntry.COLUMN_SYMBOL},
+                                            StockQuoteContract.StockQuoteEntry.COLUMN_SYMBOL + "= ?",
                                             new String[]{input.toString()}, null);
                                     if (c.getCount() != 0) {
                                         Toast toast =
@@ -230,7 +236,7 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
         if (id == R.id.action_change_units) {
             // this is for changing stock changes from percent value to dollar value
             Utils.showPercent = !Utils.showPercent;
-            this.getContentResolver().notifyChange(QuoteProvider.Quotes.CONTENT_URI, null);
+            this.getContentResolver().notifyChange(StockQuoteContract.StockQuoteEntry.CONTENT_URI, null);
         }
 
         return super.onOptionsItemSelected(item);
@@ -239,14 +245,17 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         // This narrows the return to only the stocks that are most current.
-        return new CursorLoader(this, QuoteProvider.Quotes.CONTENT_URI,
-                new String[]{QuoteColumns._ID,
-                        QuoteColumns.SYMBOL,
-                        QuoteColumns.BIDPRICE,
-                        QuoteColumns.PERCENT_CHANGE,
-                        QuoteColumns.CHANGE,
-                        QuoteColumns.ISUP},
-                        QuoteColumns.ISCURRENT + " = ?",
+
+        String[] projection = new String[]{StockQuoteContract.StockQuoteEntry._ID,
+                StockQuoteContract.StockQuoteEntry.COLUMN_SYMBOL,
+                StockQuoteContract.StockQuoteEntry.COLUMN_BID,
+                StockQuoteContract.StockQuoteEntry.COLUMN_PERCENT_CHANGE,
+                StockQuoteContract.StockQuoteEntry.COLUMN_CHANGE,
+                StockQuoteContract.StockQuoteEntry.COLUMN_ISUP};
+
+        return new CursorLoader(this, StockQuoteContract.StockQuoteEntry.CONTENT_URI,
+                projection,
+                StockQuoteContract.StockQuoteEntry.COLUMN_ISCURRENT + " = ?",
                 new String[]{"1"},
                 null);
     }

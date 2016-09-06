@@ -38,7 +38,7 @@
                     tools:text="Yahoo.Inc" />
 
                 <TextView
-                    android:id="@+id/quoteSimbol"
+                    android:id="@+id/quoteSymbol"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:gravity="center_vertical"
@@ -59,7 +59,7 @@
 
             <com.github.mikephil.charting.charts.LineChart android:id="@+id/stockQuoteChart"
                 android:layout_width="match_parent"
-                android:layout_height="300px" />
+                android:layout_height="500dp" />
 
 
         </LinearLayout>

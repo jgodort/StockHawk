@@ -13,13 +13,12 @@ import android.util.Log;
 import com.google.android.gms.gcm.GcmNetworkManager;
 import com.google.android.gms.gcm.GcmTaskService;
 import com.google.android.gms.gcm.TaskParams;
-import com.sam_chordas.android.stockhawk.data.QuoteColumns;
-import com.sam_chordas.android.stockhawk.data.QuoteProvider;
+import com.sam_chordas.android.stockhawk.data.StockQuoteContract;
 import com.sam_chordas.android.stockhawk.rest.ServiceGenerator;
 import com.sam_chordas.android.stockhawk.rest.Utils;
 import com.sam_chordas.android.stockhawk.rest.client.YahooFinanceAPIClient;
 import com.sam_chordas.android.stockhawk.rest.model.Quote;
-import com.sam_chordas.android.stockhawk.rest.model.YahooModel;
+import com.sam_chordas.android.stockhawk.rest.model.StockQuoteModel;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -84,8 +83,8 @@ public class StockTaskService extends GcmTaskService {
         Log.d(LOG_TAG, "QUERY: " + url);
         List<Quote> quoteList = null;
 
-        Call<YahooModel> call = yahooClient.getStocks(url);
-        Response<YahooModel> response = call.execute();
+        Call<StockQuoteModel> call = yahooClient.getStocks(url);
+        Response<StockQuoteModel> response = call.execute();
         if (response.isSuccessful()) {
             Log.d(LOG_TAG, "The request to the API bring back " + response.body().query.getCount() + " Quotes");
             quoteList = response.body().query.getResults().getQuote();
@@ -114,7 +113,6 @@ public class StockTaskService extends GcmTaskService {
 
             if (fetchedQuotes != null && !fetchedQuotes.isEmpty()) {
                 storeOnDatabase(fetchedQuotes);
-                ContentValues contentValues = new ContentValues();
             }
         } catch (IOException | RemoteException | OperationApplicationException e) {
             Log.e(LOG_TAG, e.getMessage());
@@ -135,14 +133,14 @@ public class StockTaskService extends GcmTaskService {
         if (!Collections.EMPTY_LIST.equals(inserts)) {
             if (isUpdate) {
                 ContentValues contentValues = new ContentValues();
-                contentValues.put(QuoteColumns.ISCURRENT, 0);
-                mContext.getContentResolver().update(QuoteProvider.Quotes.CONTENT_URI, contentValues,
+                contentValues.put(StockQuoteContract.StockQuoteEntry.COLUMN_ISCURRENT, 0);
+                mContext.getContentResolver().update(StockQuoteContract.StockQuoteEntry.CONTENT_URI, contentValues,
                         null, null);
             }
 
 
             //perform a masive bulk insert
-            mContext.getContentResolver().applyBatch(QuoteProvider.AUTHORITY, inserts);
+            mContext.getContentResolver().applyBatch(StockQuoteContract.CONTENT_AUTHORITY, inserts);
         }
 
     }
@@ -163,8 +161,8 @@ public class StockTaskService extends GcmTaskService {
         if (params.getTag().equals("init") || params.getTag().equals("periodic") || params.getTag().equals("add")) {
             isUpdate = true;
             dataBaseCursor = contentResolver.query(
-                    QuoteProvider.Quotes.CONTENT_URI,
-                    new String[]{"Distinct " + QuoteColumns.SYMBOL},
+                    StockQuoteContract.StockQuoteEntry.CONTENT_URI,
+                    new String[]{"Distinct " + StockQuoteContract.StockQuoteEntry.COLUMN_SYMBOL},
                     null,
                     null,
                     null);

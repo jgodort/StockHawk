@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:xliff="http://schemas.android.com/tools">
+    <string name="action_change_units" translatable="true">Cambiar Unidades</string>
+    <string name="symbol_search" translatable="true">Busqueda de Acciones</string>
+    <string name="content_test" translatable="true">Busque por Simbolo</string>
+    <string name="input_hint" translatable="false">FB</string>
+    <string name="input_prefill" />
+    <string name="network_toast">Vaya!! Esta aplicacion requiere acceso a internet.</string>
+    <string name="no_network_available">No hay conexion!! Compruebe la conexion y refresque.</string>
+    <string name="no_stocks_display">Pulse + para añadir acciones.</string>
+    <string name="dailyLabel" translatable="true">Diario</string>
+    <string name="yearlyLabel" translatable="true">Anual</string>
+    <string name="rangeLabel" translatable="true">Rango</string>
+
+    <!-- A11y -->
+    <string name="a11y_daily_low">Valor Mínimo Diario: <xliff:g id="dlv">%1$s</xliff:g></string>
+    <string name="a11y_daily_high">Valor Máximo Diario: <xliff:g id="dhv">%1$s</xliff:g></string>
+    <string name="a11y_yearly_low">Valor Mínimo Anual: <xliff:g id="ylv">%1$s</xliff:g></string>
+    <string name="a11y_yearly_high">Valor Máximo Anual: <xliff:g id="yhv">%1$s</xliff:g></string>
+    <string name="a11y_dayly_range">Rango Diario: <xliff:g id="drange">%1$s</xliff:g></string>
+    <string name="a11y_yearly_range">Rango Anual: <xliff:g id="yrange">%1$s</xliff:g></string>
+    <string name="a11y_increse_icon">Icono Incremento:</string>
+    <string name="a11y_decrease_icon">Icono Decremento:</string>
+    <string name="a11y_company_name">Compañía: <xliff:g id="cn">%1$s</xliff:g></string>
+    <string name="a11y_stock_symbol">Simbolo Acción: <xliff:g id="ssym">%1$s</xliff:g></string>
+
+</resources>

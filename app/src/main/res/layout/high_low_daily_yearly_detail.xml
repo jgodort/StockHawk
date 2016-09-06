@@ -4,7 +4,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="match_parent"
     android:orientation="vertical"
     android:paddingEnd="@dimen/activity_horizontal_margin"
     android:paddingLeft="@dimen/activity_horizontal_margin"
@@ -12,24 +12,9 @@
     android:paddingStart="@dimen/activity_horizontal_margin"
     tools:showIn="@layout/detail_stockquote">
 
-
-    <TextView
-        android:id="@+id/HighLow"
+    <android.support.v7.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center_vertical|center_horizontal"
-        android:paddingEnd="@dimen/activity_horizontal_margin"
-        android:paddingLeft="@dimen/activity_horizontal_margin"
-        android:paddingRight="@dimen/activity_horizontal_margin"
-        android:paddingStart="@dimen/activity_horizontal_margin"
-        android:textAppearance="@style/Base.TextAppearance.AppCompat.Title"
-        tools:text="High/Low" />
-
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
         android:paddingEnd="@dimen/activity_horizontal_margin"
         android:paddingLeft="@dimen/activity_horizontal_margin"
         android:paddingRight="@dimen/activity_horizontal_margin"
@@ -45,111 +30,216 @@
             android:paddingStart="@dimen/activity_horizontal_margin">
 
             <ImageView
-                android:id="@+id/stock_rise_icon"
+                android:id="@+id/fill"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:src="@drawable/stock_rise" />
+                android:layout_height="40dp"
+                android:src="@drawable/stock_rise"
+                android:visibility="invisible" />
 
             <TextView
-                android:id="@+id/dailyHigh"
+                android:id="@+id/dailyText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
                 android:layout_weight="2"
-                android:gravity="center_horizontal"
+                android:gravity="center_vertical|center_horizontal"
                 android:paddingEnd="@dimen/activity_horizontal_margin"
                 android:paddingLeft="@dimen/activity_horizontal_margin"
                 android:paddingRight="@dimen/activity_horizontal_margin"
                 android:paddingStart="@dimen/activity_horizontal_margin"
+                android:text="@string/dailyLabel"
                 android:textAppearance="@style/Base.TextAppearance.AppCompat.Small"
-                tools:text="42.46" />
-
+                tools:text="@string/dailyLabel" />
 
             <TextView
-                android:id="@+id/dailyLow"
+                android:id="@+id/yearlyText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
                 android:layout_weight="2"
-                android:gravity="center_horizontal"
+                android:gravity="center_vertical|center_horizontal"
                 android:paddingEnd="@dimen/activity_horizontal_margin"
                 android:paddingLeft="@dimen/activity_horizontal_margin"
                 android:paddingRight="@dimen/activity_horizontal_margin"
                 android:paddingStart="@dimen/activity_horizontal_margin"
+                android:text="@string/yearlyLabel"
                 android:textAppearance="@style/Base.TextAppearance.AppCompat.Small"
-                tools:text="42.08" />
-
-            <TextView
-                android:id="@+id/daylyLegend"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="2"
-                android:gravity="end"
-                android:paddingEnd="@dimen/activity_horizontal_margin"
-                android:paddingLeft="@dimen/activity_horizontal_margin"
-                android:paddingRight="@dimen/activity_horizontal_margin"
-                android:paddingStart="@dimen/activity_horizontal_margin"
-                android:textAppearance="@style/Base.TextAppearance.AppCompat.Small"
-                tools:text="Daily" />
+                tools:text="@string/yearlyLabel" />
 
         </LinearLayout>
+    </android.support.v7.widget.CardView>
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="horizontal"
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingEnd="@dimen/activity_horizontal_margin"
+        android:paddingLeft="@dimen/activity_horizontal_margin"
+        android:paddingRight="@dimen/activity_horizontal_margin"
+        android:paddingStart="@dimen/activity_horizontal_margin">
+
+        <ImageView
+            android:id="@+id/stock_rise_icon"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:src="@drawable/stock_rise" />
+
+        <TextView
+            android:id="@+id/dailyHigh"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_weight="2"
+            android:gravity="center_horizontal|center_vertical"
             android:paddingEnd="@dimen/activity_horizontal_margin"
             android:paddingLeft="@dimen/activity_horizontal_margin"
             android:paddingRight="@dimen/activity_horizontal_margin"
-            android:paddingStart="@dimen/activity_horizontal_margin">
-
-            <ImageView
-                android:id="@+id/stock_fall_icon"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:src="@drawable/stock_fall" />
-
-            <TextView
-                android:id="@+id/yearlyHigh"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="2"
-                android:gravity="center_horizontal"
-                android:paddingEnd="@dimen/activity_horizontal_margin"
-                android:paddingLeft="@dimen/activity_horizontal_margin"
-                android:paddingRight="@dimen/activity_horizontal_margin"
-                android:paddingStart="@dimen/activity_horizontal_margin"
-                android:textAppearance="@style/Base.TextAppearance.AppCompat.Small"
-                tools:text="42.46" />
+            android:paddingStart="@dimen/activity_horizontal_margin"
+            android:textAppearance="@style/Base.TextAppearance.AppCompat.Small"
+            tools:text="42.46" />
 
 
-            <TextView
-                android:id="@+id/yearlyLow"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="2"
-                android:gravity="center_horizontal"
-                android:paddingEnd="@dimen/activity_horizontal_margin"
-                android:paddingLeft="@dimen/activity_horizontal_margin"
-                android:paddingRight="@dimen/activity_horizontal_margin"
-                android:paddingStart="@dimen/activity_horizontal_margin"
-                android:textAppearance="@style/Base.TextAppearance.AppCompat.Small"
-                tools:text="42.08" />
+        <TextView
+            android:id="@+id/yearlyHigh"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_weight="2"
+            android:gravity="center_horizontal"
+            android:paddingEnd="@dimen/activity_horizontal_margin"
+            android:paddingLeft="@dimen/activity_horizontal_margin"
+            android:paddingRight="@dimen/activity_horizontal_margin"
+            android:paddingStart="@dimen/activity_horizontal_margin"
+            android:textAppearance="@style/Base.TextAppearance.AppCompat.Small"
+            tools:text="42.46" />
 
-            <TextView
-                android:id="@+id/yearlyLegend"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="2"
-                android:gravity="end"
-                android:paddingEnd="@dimen/activity_horizontal_margin"
-                android:paddingLeft="@dimen/activity_horizontal_margin"
-                android:paddingRight="@dimen/activity_horizontal_margin"
-                android:paddingStart="@dimen/activity_horizontal_margin"
-                android:textAppearance="@style/Base.TextAppearance.AppCompat.Small"
-                tools:text="Yearly" />
-        </LinearLayout>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:paddingEnd="@dimen/activity_horizontal_margin"
+        android:paddingLeft="@dimen/activity_horizontal_margin"
+        android:paddingRight="@dimen/activity_horizontal_margin"
+        android:paddingStart="@dimen/activity_horizontal_margin">
+
+        <ImageView
+            android:id="@+id/stock_fall_icon"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:src="@drawable/stock_fall" />
+
+        <TextView
+            android:id="@+id/dailyLow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_weight="2"
+            android:gravity="center_horizontal"
+            android:paddingEnd="@dimen/activity_horizontal_margin"
+            android:paddingLeft="@dimen/activity_horizontal_margin"
+            android:paddingRight="@dimen/activity_horizontal_margin"
+            android:paddingStart="@dimen/activity_horizontal_margin"
+            android:textAppearance="@style/Base.TextAppearance.AppCompat.Small"
+            tools:text="42.08" />
+
+
+        <TextView
+            android:id="@+id/yearlyLow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_weight="2"
+            android:gravity="center_horizontal"
+            android:paddingEnd="@dimen/activity_horizontal_margin"
+            android:paddingLeft="@dimen/activity_horizontal_margin"
+            android:paddingRight="@dimen/activity_horizontal_margin"
+            android:paddingStart="@dimen/activity_horizontal_margin"
+            android:textAppearance="@style/Base.TextAppearance.AppCompat.Small"
+            tools:text="42.08" />
 
 
     </LinearLayout>
 
 
+    <android.support.v7.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingEnd="@dimen/activity_horizontal_margin"
+            android:paddingLeft="@dimen/activity_horizontal_margin"
+            android:paddingRight="@dimen/activity_horizontal_margin"
+            android:paddingStart="@dimen/activity_horizontal_margin">
+
+            <TextView
+                android:id="@+id/rangeTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_weight="2"
+                android:gravity="center_horizontal"
+                android:paddingEnd="@dimen/activity_horizontal_margin"
+                android:paddingLeft="@dimen/activity_horizontal_margin"
+                android:paddingRight="@dimen/activity_horizontal_margin"
+                android:paddingStart="@dimen/activity_horizontal_margin"
+                android:text="@string/rangeLabel"
+                android:textAppearance="@style/Base.TextAppearance.AppCompat.Small"
+                tools:text="Range" />
+
+        </LinearLayout>
+    </android.support.v7.widget.CardView>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingEnd="@dimen/activity_horizontal_margin"
+        android:paddingLeft="@dimen/activity_horizontal_margin"
+        android:paddingRight="@dimen/activity_horizontal_margin"
+        android:paddingStart="@dimen/activity_horizontal_margin">
+
+        <ImageView
+            android:id="@+id/fill1"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:src="@drawable/stock_rise"
+            android:visibility="invisible" />
+
+        <TextView
+            android:id="@+id/rangeDaily"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_weight="2"
+            android:gravity="center_horizontal"
+            android:paddingEnd="@dimen/activity_horizontal_margin"
+            android:paddingLeft="@dimen/activity_horizontal_margin"
+            android:paddingRight="@dimen/activity_horizontal_margin"
+            android:paddingStart="@dimen/activity_horizontal_margin"
+            android:textAppearance="@style/Base.TextAppearance.AppCompat.Caption"
+            tools:text="589.38 - 789.87" />
+
+        <TextView
+            android:id="@+id/rangeYearly"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_weight="2"
+            android:gravity="center_horizontal"
+            android:paddingEnd="@dimen/activity_horizontal_margin"
+            android:paddingLeft="@dimen/activity_horizontal_margin"
+            android:paddingRight="@dimen/activity_horizontal_margin"
+            android:paddingStart="@dimen/activity_horizontal_margin"
+            android:textAppearance="@style/Base.TextAppearance.AppCompat.Caption"
+            tools:text="589.38 - 789.87" />
+
+    </LinearLayout>
+
+
 </LinearLayout>
+

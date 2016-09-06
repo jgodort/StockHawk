@@ -6,8 +6,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.widget.Toast;
 
-import com.sam_chordas.android.stockhawk.data.QuoteColumns;
-import com.sam_chordas.android.stockhawk.data.QuoteProvider;
+import com.sam_chordas.android.stockhawk.data.StockQuoteContract;
 import com.sam_chordas.android.stockhawk.rest.model.Quote;
 
 /**
@@ -45,32 +44,70 @@ public class Utils {
     public static ContentProviderOperation buildBatchOperation(Quote quote, Context context) {
 
         ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(
-                QuoteProvider.Quotes.CONTENT_URI);
+                StockQuoteContract.StockQuoteEntry.CONTENT_URI);
 
-        String symbol = quote.getSymbol();
-        String bid = quote.getBid();
-        String percentChange = quote.getPercentChange();
-        String change = quote.getChange();
+        if (null != quote.getSymbol() &&
+                !quote.getSymbol().isEmpty() &&
+                null != quote.getPercentChange() &&
+                !quote.getPercentChange().isEmpty() &&
+                null != quote.getChange() &&
+                !quote.getChange().isEmpty()) {
 
-        if (null != symbol &&
-                !symbol.isEmpty() &&
-                null != percentChange &&
-                !percentChange.isEmpty() &&
-                null != change &&
-                !change.isEmpty()) {
 
-            builder.withValue(QuoteColumns.SYMBOL, symbol);
-            builder.withValue(QuoteColumns.BIDPRICE, truncateBidPrice(bid));
-            builder.withValue(QuoteColumns.PERCENT_CHANGE,
-                    truncateChange(percentChange, true));
-            builder.withValue(QuoteColumns.CHANGE, truncateChange(change, false));
-            builder.withValue(QuoteColumns.ISCURRENT, 1);
+            builder.withValue(StockQuoteContract.StockQuoteEntry.COLUMN_ASK, quote.getAsk());
 
-            if (change.charAt(0) == '-') {
-                builder.withValue(QuoteColumns.ISUP, 0);
+            builder.withValue(StockQuoteContract.StockQuoteEntry.COLUMN_AVERAGE_DAILY_VOLUME, quote.averageDailyVolume);
+
+            builder.withValue(StockQuoteContract.StockQuoteEntry.COLUMN_BID,
+                    truncateBidPrice(quote.getBid()));
+            builder.withValue(StockQuoteContract.StockQuoteEntry.COLUMN_BOOK_VALUE, quote.bookValue);
+
+            builder.withValue(StockQuoteContract.StockQuoteEntry.COLUMN_CHANGE,
+                    truncateChange(quote.getChange(), false));
+
+            builder.withValue(StockQuoteContract.StockQuoteEntry.COLUMN_CHANGE_PERCENT,
+                    truncateChange(quote.getPercentChange(), true));
+
+            builder.withValue(StockQuoteContract.StockQuoteEntry.COLUMN_CHANGE_PERCENTCHANGE,
+                    quote.getChangePercentChange());
+
+            builder.withValue(StockQuoteContract.StockQuoteEntry.COLUMN_CURRENCY, quote.getCurrency());
+
+            builder.withValue(StockQuoteContract.StockQuoteEntry.COLUMN_DAYS_HIGH, quote.getDaysHigh());
+            builder.withValue(StockQuoteContract.StockQuoteEntry.COLUMN_DAYS_LOW, quote.getDaysLow());
+            builder.withValue(StockQuoteContract.StockQuoteEntry.COLUMN_DAYS_RANGE, quote.getDaysRange());
+
+            builder.withValue(StockQuoteContract.StockQuoteEntry.COLUMN_ISCURRENT,
+                    1);
+
+            if (quote.getChange().charAt(0) == '-') {
+                builder.withValue(StockQuoteContract.StockQuoteEntry.COLUMN_ISUP, 0);
             } else {
-                builder.withValue(QuoteColumns.ISUP, 1);
+                builder.withValue(StockQuoteContract.StockQuoteEntry.COLUMN_ISUP, 1);
             }
+
+            builder.withValue(StockQuoteContract.StockQuoteEntry.COLUMN_LAST_TRADE_PRICE, quote.getLastTradeDate());
+
+            builder.withValue(StockQuoteContract.StockQuoteEntry.COLUMN_LAST_TRADE_TIME, quote.getLastTradeTime());
+
+            builder.withValue(StockQuoteContract.StockQuoteEntry.COLUMN_LASTTRADE_DATE, quote.getLastTradeDate());
+
+            builder.withValue(StockQuoteContract.StockQuoteEntry.COLUMN_MARKET_CAPITALIZATION, quote.getMarketCapitalization());
+            builder.withValue(StockQuoteContract.StockQuoteEntry.COLUMN_NAME, quote.getName());
+
+            builder.withValue(StockQuoteContract.StockQuoteEntry.COLUMN_OPEN, quote.getOpen());
+
+            builder.withValue(StockQuoteContract.StockQuoteEntry.COLUMN_PERCENT_CHANGE, quote.getPercentChange());
+            builder.withValue(StockQuoteContract.StockQuoteEntry.COLUMN_PREVIOUS_CLOSE, quote.getPreviousClose());
+            builder.withValue(StockQuoteContract.StockQuoteEntry.COLUMN_PRICE_BOOK, quote.getPriceBook());
+            builder.withValue(StockQuoteContract.StockQuoteEntry.COLUMN_PRICE_SALES, quote.getPriceSales());
+            builder.withValue(StockQuoteContract.StockQuoteEntry.COLUMN_STOCK_EXCHANGE, quote.stockExchange);
+            builder.withValue(StockQuoteContract.StockQuoteEntry.COLUMN_SYMBOL, quote.getSymbol());
+            builder.withValue(StockQuoteContract.StockQuoteEntry.COLUMN_VOLUME, quote.getVolume());
+            builder.withValue(StockQuoteContract.StockQuoteEntry.COLUMN_YEAR_HIGH, quote.getYearHigh());
+            builder.withValue(StockQuoteContract.StockQuoteEntry.COLUMN_YEAR_LOW, quote.getYearLow());
+            builder.withValue(StockQuoteContract.StockQuoteEntry.COLUMN_YEAR_RANGE, quote.getYearRange());
+
         } else {
             launchToastMessageOnMainThread(context);
         }

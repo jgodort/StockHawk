@@ -3,9 +3,9 @@ package com.sam_chordas.android.stockhawk.rest.model;
 
 import com.google.gson.annotations.SerializedName;
 
-public class YahooModel {
+public class StockQuoteModel {
 
     @SerializedName("query")
-    public Query query;
+    public QueryQuote query;
 
 }

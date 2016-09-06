@@ -1,6 +1,7 @@
 package com.sam_chordas.android.stockhawk.rest.client;
 
-import com.sam_chordas.android.stockhawk.rest.model.YahooModel;
+import com.sam_chordas.android.stockhawk.rest.model.HistoricalStockQuoteModel;
+import com.sam_chordas.android.stockhawk.rest.model.StockQuoteModel;
 
 import retrofit2.Call;
 import retrofit2.http.GET;
@@ -15,7 +16,11 @@ public interface YahooFinanceAPIClient {
 
 
     @GET("yql?format=json&diagnostics=true&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys")
-    Call<YahooModel> getStocks(@Query("q") String query);
+    Call<StockQuoteModel> getStocks(@Query("q") String query);
+
+    @GET("yql?&format=json&diagnostics=true&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys")
+    Call<HistoricalStockQuoteModel> getHistorialStockData(@Query("q") String query);
+
 
 
 }

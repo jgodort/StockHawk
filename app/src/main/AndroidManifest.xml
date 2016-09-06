@@ -29,6 +29,10 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".ui.DetailActivity"
+            android:label="Details" />
+
         <service
             android:name="com.sam_chordas.android.stockhawk.service.StockTaskService"
             android:exported="true"
@@ -40,8 +44,8 @@
         <service android:name="com.sam_chordas.android.stockhawk.service.StockIntentService" />
 
         <provider
-            android:name="com.sam_chordas.android.stockhawk.data.generated.QuoteProvider"
-            android:authorities="com.sam_chordas.android.stockhawk.data.QuoteProvider"
+            android:name=".data.StockQuoteProvider"
+            android:authorities="@string/content_authority"
             android:exported="false" />
     </application>
 

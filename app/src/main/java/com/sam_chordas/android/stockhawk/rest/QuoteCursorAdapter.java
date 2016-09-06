@@ -12,8 +12,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.sam_chordas.android.stockhawk.R;
-import com.sam_chordas.android.stockhawk.data.QuoteColumns;
-import com.sam_chordas.android.stockhawk.data.QuoteProvider;
+import com.sam_chordas.android.stockhawk.data.StockQuoteContract;
 import com.sam_chordas.android.stockhawk.touch_helper.ItemTouchHelperAdapter;
 import com.sam_chordas.android.stockhawk.touch_helper.ItemTouchHelperViewHolder;
 
@@ -47,8 +46,8 @@ public class QuoteCursorAdapter extends CursorRecyclerViewAdapter<QuoteCursorAda
 
     @Override
     public void onBindViewHolder(final ViewHolder viewHolder, final Cursor cursor) {
-        viewHolder.symbol.setText(cursor.getString(cursor.getColumnIndex("symbol")));
-        viewHolder.bidPrice.setText(cursor.getString(cursor.getColumnIndex("bid_price")));
+        viewHolder.symbol.setText(cursor.getString(cursor.getColumnIndex(StockQuoteContract.StockQuoteEntry.COLUMN_SYMBOL)));
+        viewHolder.bidPrice.setText(cursor.getString(cursor.getColumnIndex(StockQuoteContract.StockQuoteEntry.COLUMN_BID)));
         int sdk = Build.VERSION.SDK_INT;
         if (cursor.getInt(cursor.getColumnIndex("is_up")) == 1) {
             if (sdk < Build.VERSION_CODES.JELLY_BEAN) {
@@ -68,18 +67,29 @@ public class QuoteCursorAdapter extends CursorRecyclerViewAdapter<QuoteCursorAda
             }
         }
         if (Utils.showPercent) {
-            viewHolder.change.setText(cursor.getString(cursor.getColumnIndex("percent_change")));
+            viewHolder.change.setText(cursor.getString(cursor.getColumnIndex(StockQuoteContract.StockQuoteEntry.COLUMN_PERCENT_CHANGE)));
         } else {
-            viewHolder.change.setText(cursor.getString(cursor.getColumnIndex("change")));
+            viewHolder.change.setText(cursor.getString(cursor.getColumnIndex(StockQuoteContract.StockQuoteEntry.COLUMN_CHANGE)));
         }
+
+
+    }
+
+    public int getStockId(int position) {
+        Cursor cursor = getCursor();
+        cursor.moveToPosition(position);
+
+        return cursor.getInt(cursor.getColumnIndex(StockQuoteContract.StockQuoteEntry._ID));
+
     }
 
     @Override
     public void onItemDismiss(int position) {
         Cursor c = getCursor();
         c.moveToPosition(position);
-        String symbol = c.getString(c.getColumnIndex(QuoteColumns.SYMBOL));
-        mContext.getContentResolver().delete(QuoteProvider.Quotes.withSymbol(symbol), null, null);
+        String symbol = c.getString(c.getColumnIndex(StockQuoteContract.StockQuoteEntry.COLUMN_SYMBOL));
+        mContext.getContentResolver().delete(StockQuoteContract.StockQuoteEntry.CONTENT_URI,
+                StockQuoteContract.StockQuoteEntry.COLUMN_SYMBOL + " =" + symbol, null);
         notifyItemRemoved(position);
     }
 
@@ -87,7 +97,6 @@ public class QuoteCursorAdapter extends CursorRecyclerViewAdapter<QuoteCursorAda
     public int getItemCount() {
         return super.getItemCount();
     }
-
 
 
     public static class ViewHolder extends RecyclerView.ViewHolder

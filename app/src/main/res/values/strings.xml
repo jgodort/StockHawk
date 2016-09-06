@@ -1,15 +1,33 @@
-<resources>
+<resources xmlns:xliff="http://schemas.android.com/tools">
     <string name="app_name">Stock Hawk</string>
 
-    <string name="action_example">Example action</string>
 
     <string name="action_settings">Settings</string>
-    <string name="action_change_units">Change Units</string>
-    <string name="symbol_search">Symbol Search</string>
-    <string name="content_test">Search for a Stock Symbol</string>
-    <string name="input_hint">FB</string>
-    <string name="input_prefill"></string>
+    <string name="action_change_units" translatable="true">Change Units</string>
+    <string name="symbol_search" translatable="true" >Symbol Search</string>
+    <string name="content_test" translatable="true">Search for a Stock Symbol</string>
+    <string name="input_hint" translatable="false">FB</string>
+    <string name="input_prefill"/>
     <string name="network_toast">Uh-oh! This app requires an internet connection</string>
     <string name="no_network_available">No Internet connection!! Check your connection and refresh.</string>
     <string name="no_stocks_display">Tap on + button to add your favorites Stocks.</string>
+    <string name="dailyLabel" translatable="true">Daily</string>
+    <string name="yearlyLabel" translatable="true">Yearly</string>
+    <string name="rangeLabel" translatable="true">Range</string>
+
+    <!-- A11y -->
+    <string name="a11y_daily_low">Daily Low Value: <xliff:g id="dlv">%1$s</xliff:g></string>
+    <string name="a11y_daily_high">Daily High Value: <xliff:g id="dhv">%1$s</xliff:g></string>
+    <string name="a11y_yearly_low">Yearly Low Value: <xliff:g id="ylv">%1$s</xliff:g></string>
+    <string name="a11y_yearly_high">Yearly High Value: <xliff:g id="yhv">%1$s</xliff:g></string>
+    <string name="a11y_dayly_range">Daily Range: <xliff:g id="drange">%1$s</xliff:g></string>
+    <string name="a11y_yearly_range">Yearly Range: <xliff:g id="yrange">%1$s</xliff:g></string>
+    <string name="a11y_increse_icon">Increse Value Icon</string>
+    <string name="a11y_decrease_icon">Decrease Value Icon</string>
+    <string name="a11y_company_name">Company Name: <xliff:g id="cn">%1$s</xliff:g></string>
+    <string name="a11y_stock_symbol">Stock Symbol: <xliff:g id="ssym">%1$s</xliff:g></string>
+
+
+    <string name="content_authority">com.sam_chordas.android.stockhawk.data</string>
+
 </resources>
