@@ -1,71 +1,80 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/detail_framelayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <LinearLayout
+    <android.support.v4.widget.NestedScrollView
+        android:id="@+id/scrollView"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical">
-
-        <android.support.v7.widget.Toolbar
-            android:id="@+id/toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:paddingEnd="@dimen/activity_horizontal_margin"
-                android:paddingLeft="@dimen/activity_horizontal_margin"
-                android:paddingRight="@dimen/activity_horizontal_margin"
-                android:paddingStart="@dimen/activity_horizontal_margin">
-
-                <TextView
-                    android:id="@+id/quoteName"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:paddingEnd="@dimen/activity_horizontal_margin"
-                    android:paddingLeft="@dimen/activity_horizontal_margin"
-                    android:paddingRight="@dimen/activity_horizontal_margin"
-                    android:paddingStart="@dimen/activity_horizontal_margin"
-                    android:textAppearance="@style/Base.TextAppearance.AppCompat.Title"
-                    android:textSize="30sp"
-                    tools:text="Yahoo.Inc" />
-
-                <TextView
-                    android:id="@+id/quoteSymbol"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:paddingEnd="@dimen/activity_horizontal_margin"
-                    android:paddingLeft="@dimen/activity_horizontal_margin"
-                    android:paddingRight="@dimen/activity_horizontal_margin"
-                    android:paddingStart="@dimen/activity_horizontal_margin"
-                    android:textAppearance="@style/Base.TextAppearance.AppCompat.Subhead"
-                    tools:text="YHOO" />
-            </LinearLayout>
-
-        </android.support.v7.widget.Toolbar>
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <com.github.mikephil.charting.charts.LineChart android:id="@+id/stockQuoteChart"
+            <android.support.v7.widget.Toolbar
+                android:id="@+id/toolbar"
                 android:layout_width="match_parent"
-                android:layout_height="500dp" />
+                android:layout_height="?attr/actionBarSize">
 
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:paddingEnd="@dimen/activity_horizontal_margin"
+                    android:paddingLeft="@dimen/activity_horizontal_margin"
+                    android:paddingRight="@dimen/activity_horizontal_margin"
+                    android:paddingStart="@dimen/activity_horizontal_margin">
+
+                    <TextView
+                        android:id="@+id/quoteName"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:paddingEnd="@dimen/activity_horizontal_margin"
+                        android:paddingLeft="@dimen/activity_horizontal_margin"
+                        android:paddingRight="@dimen/activity_horizontal_margin"
+                        android:paddingStart="@dimen/activity_horizontal_margin"
+                        android:textAppearance="@style/Base.TextAppearance.AppCompat.Title"
+                        android:textSize="30sp"
+                        tools:text="Yahoo.Inc" />
+
+                    <TextView
+                        android:id="@+id/quoteSymbol"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:paddingEnd="@dimen/activity_horizontal_margin"
+                        android:paddingLeft="@dimen/activity_horizontal_margin"
+                        android:paddingRight="@dimen/activity_horizontal_margin"
+                        android:paddingStart="@dimen/activity_horizontal_margin"
+                        android:textAppearance="@style/Base.TextAppearance.AppCompat.Subhead"
+                        tools:text="YHOO" />
+                </LinearLayout>
+
+            </android.support.v7.widget.Toolbar>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <com.github.mikephil.charting.charts.LineChart
+                    android:id="@+id/stockQuoteChart"
+                    android:layout_width="match_parent"
+                    android:layout_height="300dp" />
+
+
+            </LinearLayout>
+
+            <include layout="@layout/high_low_daily_yearly_detail" />
 
         </LinearLayout>
-
-        <include layout="@layout/high_low_daily_yearly_detail" />
-
-    </LinearLayout>
+    </android.support.v4.widget.NestedScrollView>
 
 </FrameLayout>

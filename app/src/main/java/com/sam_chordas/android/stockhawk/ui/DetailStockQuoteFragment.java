@@ -1,6 +1,8 @@
 package com.sam_chordas.android.stockhawk.ui;
 
+import android.app.ProgressDialog;
 import android.database.Cursor;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -9,6 +11,7 @@ import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -18,20 +21,25 @@ import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
+import com.github.mikephil.charting.highlight.Highlight;
+import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
+import com.github.mikephil.charting.listener.ChartTouchListener;
+import com.github.mikephil.charting.listener.OnChartGestureListener;
+import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 import com.sam_chordas.android.stockhawk.R;
 import com.sam_chordas.android.stockhawk.data.StockQuoteContract;
 import com.sam_chordas.android.stockhawk.rest.ServiceGenerator;
+import com.sam_chordas.android.stockhawk.rest.Utils;
 import com.sam_chordas.android.stockhawk.rest.client.YahooFinanceAPIClient;
 import com.sam_chordas.android.stockhawk.rest.model.HistoricalQuote;
 import com.sam_chordas.android.stockhawk.rest.model.HistoricalStockQuoteModel;
 import com.sam_chordas.android.stockhawk.rest.request.RequestCallback;
 import com.sam_chordas.android.stockhawk.rest.request.listener.RequestListener;
 
-import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 
 import butterknife.BindView;
@@ -43,7 +51,7 @@ import retrofit2.Call;
  * Email: jgodort.software@gmail.com
  */
 
-public class DetailStockQuoteFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
+public class DetailStockQuoteFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor>, OnChartGestureListener, OnChartValueSelectedListener {
 
     private static final String LOG_TAG = DetailStockQuoteFragment.class.getSimpleName();
 
@@ -102,6 +110,8 @@ public class DetailStockQuoteFragment extends Fragment implements LoaderManager.
 
     private RequestCallback<HistoricalStockQuoteModel> historialRequestCallback;
 
+    private ProgressDialog mDialog;
+
 
     public DetailStockQuoteFragment() {
         setHasOptionsMenu(true);
@@ -121,11 +131,13 @@ public class DetailStockQuoteFragment extends Fragment implements LoaderManager.
         View rootView = inflater.inflate(R.layout.detail_stockquote, container, false);
         ButterKnife.bind(this, rootView);
 
+        mDialog = new ProgressDialog(getContext());
+        mDialog.setTitle(getString(R.string.loading_message));
 
-        chartStock.setContentDescription("");
-        // no description text
-        chartStock.setDescription("");
+
         chartStock.setNoDataTextDescription("You need to provide data for the chart.");
+        chartStock.setOnChartGestureListener(this);
+        chartStock.setOnChartValueSelectedListener(this);
 
         //Retrive the Bundle arguments
         Bundle bundle = getArguments();
@@ -142,31 +154,93 @@ public class DetailStockQuoteFragment extends Fragment implements LoaderManager.
 
     private void fillLinechart(List<HistoricalQuote> processedData) {
 
-        LineDataSet lineDataSet;
-        List<String> labelsXAxis;
-        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        //Retrive the X/Y Axis dataset values.
+        List<String> xAxis = generateXAxisValues(processedData);
+        List<List<Entry>> yAxis = generateYAxisValues(processedData);
 
-        if (null != processedData && !processedData.isEmpty()) {
+        if (null != xAxis && null != yAxis) {
+            LineDataSet datasetHigh;
+            LineDataSet datasetLow;
+
+            //Create a dataset  and give it a type.
+            datasetHigh = new LineDataSet(yAxis.get(0), "High Value");
+            datasetHigh.setColor(Color.GREEN);
+            datasetHigh.setCircleColor(Color.BLUE);
+            datasetHigh.setFillColor(Color.GREEN);
+            datasetHigh.setDrawFilled(true);
+            datasetHigh.setValueTextColor(Color.WHITE);
+            datasetLow = new LineDataSet(yAxis.get(1), "Low Value");
+            datasetLow.setColor(Color.RED);
+            datasetLow.setCircleColor(Color.BLUE);
+            datasetLow.setFillColor(Color.RED);
+            datasetLow.setDrawFilled(true);
+            datasetLow.setValueTextColor(Color.WHITE);
+
+
+            ArrayList<ILineDataSet> dataSets = new ArrayList<>();
+            dataSets.add(datasetHigh);
+            dataSets.add(datasetLow);
+
+            //Create a data object with the datasets
+            LineData data = new LineData(dataSets);
+            chartStock.setData(data);
+
+
+            //customize contentDescription and chart information
+            chartStock.setContentDescription(getString(R.string.a11y_historical_chart, quoteName.getText()));
+            // no description text
+            chartStock.setDescription("");
+
+            //Refresh the chart
+            chartStock.invalidate();
+
+
+        }
+
+    }
+
+    private List<String> generateXAxisValues(List<HistoricalQuote> data) {
+
+        List<String> labelsXAxis = null;
+        if (null != data && !data.isEmpty()) {
             labelsXAxis = new ArrayList<>();
-            List<Entry> entryData = new ArrayList<>();
-            for (HistoricalQuote hqIterator : processedData) {
+            for (HistoricalQuote hqIterator : data) {
                 try {
                     //Obtain the date instance of the string value.
-                    Date stockDate = dateFormat.parse(hqIterator.getDate());
-                    labelsXAxis.add(hqIterator.getDate());
+                    GregorianCalendar stockDate = new GregorianCalendar();
+                    stockDate.setTime(new SimpleDateFormat("yyyy-MM-dd").parse(hqIterator.getDate()));
+                    labelsXAxis.add(String.valueOf(stockDate.get(GregorianCalendar.DATE)) + "/" + String.valueOf(stockDate.get(GregorianCalendar.MONTH)));
 
-                    entryData.add(new Entry(stockDate.getTime(), Float.valueOf(hqIterator.getHigh())));
                 } catch (ParseException e) {
                     e.printStackTrace();
                 }
 
             }
-            lineDataSet=new LineDataSet(entryData,"Prueba");
-            LineData lineData=new LineData(lineDataSet);
-            chartStock.setData(lineData);
+        }
+        return labelsXAxis;
+    }
 
+    private List<List<Entry>> generateYAxisValues(List<HistoricalQuote> data) {
+
+        List<List<Entry>> obtainedDataSets = null;
+        List<Entry> valuesYAxisHigh = null;
+        List<Entry> valuesYAxisLow = null;
+
+        if (null != data && !data.isEmpty()) {
+            int counter = 0;
+            valuesYAxisHigh = new ArrayList<>();
+            valuesYAxisLow = new ArrayList<>();
+            for (HistoricalQuote hqIterator : data) {
+                valuesYAxisHigh.add(new Entry(counter, Float.valueOf(hqIterator.getHigh())));
+                valuesYAxisLow.add(new Entry(counter, Float.valueOf(hqIterator.getLow())));
+                counter++;
+            }
+            obtainedDataSets = new ArrayList<>();
+            obtainedDataSets.add(valuesYAxisHigh);
+            obtainedDataSets.add(valuesYAxisLow);
         }
 
+        return obtainedDataSets;
     }
 
     @Override
@@ -189,7 +263,7 @@ public class DetailStockQuoteFragment extends Fragment implements LoaderManager.
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-
+        mDialog.show();
         if (null != data && data.moveToFirst()) {
 
             String nameValue = data.getString(
@@ -250,18 +324,21 @@ public class DetailStockQuoteFragment extends Fragment implements LoaderManager.
                 public void onSuccess(Object response) {
                     historicalStockData = new ArrayList<>(((HistoricalStockQuoteModel) response).getQuery().getResults().getQuote());
                     fillLinechart(historicalStockData);
+                    mDialog.dismiss();
                 }
 
                 @Override
                 public void onFailure(Object error) {
                     Log.e(LOG_TAG, "Error getting the historical information of " + symbolValue);
+                    mDialog.dismiss();
                 }
             };
 
             historialRequestCallback = new RequestCallback<>(listener);
             YahooFinanceAPIClient client = ServiceGenerator.createService(YahooFinanceAPIClient.class);
 
-            Call<HistoricalStockQuoteModel> call = client.getHistorialStockData("select * from yahoo.finance.historicaldata where symbol = \"YHOO\" and startDate = \"2009-09-11\" and endDate = \"2010-03-10\"");
+
+            Call<HistoricalStockQuoteModel> call = client.getHistorialStockData(Utils.generateHistoricalYQLQuery(symbolValue));
 
             call.enqueue(historialRequestCallback);
 
@@ -270,18 +347,68 @@ public class DetailStockQuoteFragment extends Fragment implements LoaderManager.
     }
 
 
-    public void prepareDataChart() {
-
-        if (historicalStockData != null) {
-
-
-            for (HistoricalQuote quote : historicalStockData) {
-            }
-        }
-    }
-
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
 
+    }
+
+    @Override
+    public void onChartGestureStart(MotionEvent me, ChartTouchListener.ChartGesture lastPerformedGesture) {
+        Log.d(LOG_TAG, "START, x: " + me.getX() + ", y: " + me.getY());
+    }
+
+    @Override
+    public void onChartGestureEnd(MotionEvent me, ChartTouchListener.ChartGesture lastPerformedGesture) {
+        Log.d(LOG_TAG, "END, lastGesture: " + lastPerformedGesture);
+    }
+
+    @Override
+    public void onChartLongPressed(MotionEvent me) {
+
+        Log.d(LOG_TAG, "LongPress");
+    }
+
+    @Override
+    public void onChartDoubleTapped(MotionEvent me) {
+        Log.d(LOG_TAG, "DoubleTapped");
+    }
+
+    @Override
+    public void onChartSingleTapped(MotionEvent me) {
+
+        Log.d(LOG_TAG, "SingleTapped");
+    }
+
+    @Override
+    public void onChartFling(MotionEvent me1, MotionEvent me2, float velocityX, float velocityY) {
+        Log.d(LOG_TAG, "Chart flinged. VeloX: " + velocityX + ", VeloY: " + velocityY);
+    }
+
+    @Override
+    public void onChartScale(MotionEvent me, float scaleX, float scaleY) {
+        Log.d(LOG_TAG, "Scale / Zoom, ScaleX: " + scaleX + ", ScaleY: " + scaleY);
+    }
+
+    @Override
+    public void onChartTranslate(MotionEvent me, float dX, float dY) {
+        Log.d(LOG_TAG, "Translate / Move, dX: " + dX + ", dY: " + dY);
+    }
+
+    @Override
+    public void onValueSelected(Entry e, Highlight h) {
+        Log.d("Entry selected", e.toString());
+        Log.d("LOWHIGH", "low: " + chartStock.getLowestVisibleX()
+                + ", high: " + chartStock.getHighestVisibleX());
+
+        Log.d("MIN MAX", "xmin: " + chartStock.getXChartMin()
+                + ", xmax: " + chartStock.getXChartMax()
+                + ", ymin: " + chartStock.getYChartMin()
+                + ", ymax: " + chartStock.getYChartMax());
+    }
+
+    @Override
+    public void onNothingSelected() {
+
+        Log.d(LOG_TAG, "Nothing selected Nothing selected.");
     }
 }

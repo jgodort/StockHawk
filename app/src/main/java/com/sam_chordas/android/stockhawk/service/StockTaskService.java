@@ -1,12 +1,9 @@
 package com.sam_chordas.android.stockhawk.service;
 
 import android.content.ContentProviderOperation;
-import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.OperationApplicationException;
-import android.database.Cursor;
-import android.database.DatabaseUtils;
 import android.os.RemoteException;
 import android.util.Log;
 
@@ -36,11 +33,6 @@ import retrofit2.Response;
 public class StockTaskService extends GcmTaskService {
     private String LOG_TAG = StockTaskService.class.getSimpleName();
 
-    private static final String BASE_QUERY = "select * from yahoo.finance.quotes" +
-            " where symbol in (";
-    private static final String BASE_QUERY_ADD = "select * from yahoo.finance.quote" +
-            " where symbol in (";
-    private static final String SAMPLE_STOCK_QUOTES = "\"YHOO\",\"AAPL\",\"GOOG\",\"MSFT\"";
 
     /**
      * Client to retrive data from Yahoo Finance API.
@@ -78,7 +70,7 @@ public class StockTaskService extends GcmTaskService {
      * @return returns a list of Quotes that match with the criteria.
      * @throws IOException
      */
-    private List fetchData(String url) throws IOException {
+    private List<Quote> fetchData(String url) throws IOException {
         Log.d(LOG_TAG, "fetching data from the API.");
         Log.d(LOG_TAG, "QUERY: " + url);
         List<Quote> quoteList = null;
@@ -104,10 +96,15 @@ public class StockTaskService extends GcmTaskService {
         if (mContext == null) {
             return GcmNetworkManager.RESULT_FAILURE;
         }
+
+        //check if is update
+        if (params.getTag().equals("init") ||
+                params.getTag().equals("periodic") ||
+                params.getTag().equals("add")) {
+            isUpdate = true;
+        }
         //Represents the query to fetch the data from the Yahoo API.
-        String queryYQL = BASE_QUERY + generateQuery(params);
-
-
+        String queryYQL = Utils.generateStockQuery(mContext, params);
         try {
             List<Quote> fetchedQuotes = fetchData(queryYQL);
 
@@ -143,54 +140,6 @@ public class StockTaskService extends GcmTaskService {
             mContext.getContentResolver().applyBatch(StockQuoteContract.CONTENT_AUTHORITY, inserts);
         }
 
-    }
-
-    /**
-     * [Refactorization of the Original Code]
-     * <p>
-     * Method to generate the query with the correct parameters depending on base
-     * to the input Task-param value.
-     *
-     * @param params
-     * @return
-     */
-    private String generateQuery(TaskParams params) {
-        ContentResolver contentResolver = mContext.getContentResolver();
-
-        Cursor dataBaseCursor;
-        if (params.getTag().equals("init") || params.getTag().equals("periodic") || params.getTag().equals("add")) {
-            isUpdate = true;
-            dataBaseCursor = contentResolver.query(
-                    StockQuoteContract.StockQuoteEntry.CONTENT_URI,
-                    new String[]{"Distinct " + StockQuoteContract.StockQuoteEntry.COLUMN_SYMBOL},
-                    null,
-                    null,
-                    null);
-
-
-            if (dataBaseCursor != null && dataBaseCursor.getCount() > 0) {
-                DatabaseUtils.dumpCursor(dataBaseCursor);
-                dataBaseCursor.moveToFirst();
-                StringBuilder mStoredSymbols = new StringBuilder();
-                for (int i = 0; i < dataBaseCursor.getCount(); i++) {
-
-                    mStoredSymbols.append("\"" +
-                            dataBaseCursor.getString(dataBaseCursor.getColumnIndex("symbol")) + "\",");
-                    dataBaseCursor.moveToNext();
-                }
-                dataBaseCursor.close();
-                if (params.getTag().equals("add")) {
-                    // get symbol from params.getExtra and build query
-                    mStoredSymbols.append("\"" +
-                            params.getExtras().getString("symbol") + "\",");
-                }
-                mStoredSymbols.replace(mStoredSymbols.length() - 1, mStoredSymbols.length(), ")");
-                return mStoredSymbols.toString();
-            } else {
-                return SAMPLE_STOCK_QUOTES + ")";
-            }
-        }
-        return null;
     }
 
 }

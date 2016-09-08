@@ -3,7 +3,6 @@
     <string name="action_change_units" translatable="true">Cambiar Unidades</string>
     <string name="symbol_search" translatable="true">Busqueda de Acciones</string>
     <string name="content_test" translatable="true">Busque por Simbolo</string>
-    <string name="input_hint" translatable="false">FB</string>
     <string name="input_prefill" />
     <string name="network_toast">Vaya!! Esta aplicacion requiere acceso a internet.</string>
     <string name="no_network_available">No hay conexion!! Compruebe la conexion y refresque.</string>

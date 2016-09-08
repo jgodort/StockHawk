@@ -1,13 +1,23 @@
 package com.sam_chordas.android.stockhawk.rest;
 
 import android.content.ContentProviderOperation;
+import android.content.ContentResolver;
 import android.content.Context;
+import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.os.Handler;
 import android.os.Looper;
 import android.widget.Toast;
 
+import com.google.android.gms.gcm.TaskParams;
 import com.sam_chordas.android.stockhawk.data.StockQuoteContract;
 import com.sam_chordas.android.stockhawk.rest.model.Quote;
+
+import java.text.Format;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 
 /**
  * Created by sam_chordas on 10/8/15.
@@ -15,6 +25,19 @@ import com.sam_chordas.android.stockhawk.rest.model.Quote;
 public class Utils {
 
     private static String LOG_TAG = Utils.class.getSimpleName();
+
+    private static final SimpleDateFormat FORMAT_DATE_YAHOO_SDF = new SimpleDateFormat("yyyy-MM-dd");
+    public static final String FORMAT_DATE_YAHOO = "yyyy-MM-dd";
+
+    private static final String HISTORICAL_BASE_QUERY = "select * from yahoo.finance.historicaldata";
+    private static final String HISTORICAL_QUERY_CONDITION = " where symbol = ";
+    private static final String HISTORICAL_QUERY_START_DATE = " and startDate = ";
+    private static final String HISTORICAL_QUERY_END_DATE = " and endDate = ";
+
+    public static final String BASE_QUERY = "select * from yahoo.finance.quotes" +
+            " where symbol in (";
+
+    private static final String SAMPLE_STOCK_QUOTES = "\"YHOO\",\"AAPL\",\"GOOG\",\"MSFT\"";
 
     public static boolean showPercent = true;
 
@@ -131,5 +154,107 @@ public class Utils {
                         Toast.LENGTH_LONG).show();
             }
         });
+    }
+
+
+    /**
+     * Method that generate a YQL query to fetch the historical information about the Stock Quote.
+     *
+     * @param quoteSymbol Quote symbol who represent the acronim of the company.
+     * @return YQL Query to make a call to the Financial API.
+     */
+    public static String generateHistoricalYQLQuery(String quoteSymbol) {
+
+        GregorianCalendar calendar = new GregorianCalendar();
+
+        calendar.set(Calendar.DATE, 1);
+        calendar.set(Calendar.MONTH, 1);
+
+        new SimpleDateFormat("yyyy-MM-dd");
+
+        StringBuffer buffer = new StringBuffer(HISTORICAL_BASE_QUERY).
+                append(HISTORICAL_QUERY_CONDITION).
+                append("\"").
+                append(quoteSymbol).
+                append("\"").
+                append(HISTORICAL_QUERY_START_DATE).
+                append("\"").
+                append(convertDateToString(calendar.getTime(), Utils.FORMAT_DATE_YAHOO)).//Start Date Value
+                append("\"").
+                append(HISTORICAL_QUERY_END_DATE).
+                append("\"").
+                append(convertDateToString(new Date(), Utils.FORMAT_DATE_YAHOO)).//End Date Value.
+                append("\"");
+
+
+        return buffer.toString();
+    }
+
+    /**
+     * [Refactorization of the Original Code]
+     * <p>
+     * Method to generate the query with the correct parameters depending on base
+     * to the input Task-param value.
+     *
+     * @param params
+     * @return
+     */
+    public static String generateStockQuery(Context context, TaskParams params) {
+        ContentResolver contentResolver = context.getContentResolver();
+        StringBuffer query = new StringBuffer(BASE_QUERY);
+
+        Cursor dataBaseCursor;
+        if (params.getTag().equals("init") || params.getTag().equals("periodic") || params.getTag().equals("add")) {
+            dataBaseCursor = contentResolver.query(
+                    StockQuoteContract.StockQuoteEntry.CONTENT_URI,
+                    new String[]{"Distinct " + StockQuoteContract.StockQuoteEntry.COLUMN_SYMBOL},
+                    null,
+                    null,
+                    null);
+
+
+            if (dataBaseCursor != null && dataBaseCursor.getCount() > 0) {
+                DatabaseUtils.dumpCursor(dataBaseCursor);
+                dataBaseCursor.moveToFirst();
+                StringBuilder mStoredSymbols = new StringBuilder();
+                for (int i = 0; i < dataBaseCursor.getCount(); i++) {
+
+                    mStoredSymbols.append("\"" +
+                            dataBaseCursor.getString(dataBaseCursor.getColumnIndex("symbol")) + "\",");
+                    dataBaseCursor.moveToNext();
+                }
+                dataBaseCursor.close();
+                if (params.getTag().equals("add")) {
+                    // get symbol from params.getExtra and build query
+                    mStoredSymbols.append("\"" +
+                            params.getExtras().getString("symbol") + "\",");
+                }
+                mStoredSymbols.replace(mStoredSymbols.length() - 1, mStoredSymbols.length(), ")");
+                query.append(mStoredSymbols.toString());
+            } else {
+                query.append(SAMPLE_STOCK_QUOTES + ")");
+            }
+        }
+        return query.toString();
+    }
+
+
+    /**
+     * Method that convert a Date into a String in the format given by parameters.
+     *
+     * @param date   A date to convert
+     * @param format Formato de fecha "MMM" para Mes Cadena, "MM" para Mes Numerico "dd" para Dia "yyyy" para Aï¿½o
+     * @return Un String con la fecha en el formato indicado
+     */
+    public static String convertDateToString(Date date, String format) {
+        if (date == null) {
+            return null;
+        }
+
+        if (format.equals(FORMAT_DATE_YAHOO)) {
+            return FORMAT_DATE_YAHOO_SDF.format(date);
+        }
+        Format formatter = new SimpleDateFormat(format);
+        return formatter.format(date);
     }
 }
