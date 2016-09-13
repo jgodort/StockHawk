@@ -7,13 +7,16 @@ import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.google.android.gms.gcm.TaskParams;
 import com.sam_chordas.android.stockhawk.data.StockQuoteContract;
+import com.sam_chordas.android.stockhawk.rest.model.HistoricalQuote;
 import com.sam_chordas.android.stockhawk.rest.model.Quote;
 
 import java.text.Format;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -139,6 +142,43 @@ public class Utils {
         return builder.build();
     }
 
+    public static ContentProviderOperation buildBatchOperation(HistoricalQuote historicalQuote, int quoteId, Context context) {
+
+        ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(
+                StockQuoteContract.HistoricalQuoteEntry.CONTENT_URI);
+
+        if (null != historicalQuote.getSymbol() &&
+                !historicalQuote.getSymbol().isEmpty()) {
+
+            builder.withValue(StockQuoteContract.HistoricalQuoteEntry.COLUMN_SYMBOL, historicalQuote.getSymbol());
+            builder.withValue(StockQuoteContract.HistoricalQuoteEntry.COLUMN_QUOTE_ID, quoteId);
+            builder.withValue(StockQuoteContract.HistoricalQuoteEntry.COLUMN_DATE, normalizeDateToPersist(historicalQuote.getDate()));
+            builder.withValue(StockQuoteContract.HistoricalQuoteEntry.COLUMN_OPEN, historicalQuote.getOpen());
+            builder.withValue(StockQuoteContract.HistoricalQuoteEntry.COLUMN_HIGH, historicalQuote.getHigh());
+            builder.withValue(StockQuoteContract.HistoricalQuoteEntry.COLUMN_LOW, historicalQuote.getLow());
+            builder.withValue(StockQuoteContract.HistoricalQuoteEntry.COLUMN_CLOSE, historicalQuote.getClose());
+            builder.withValue(StockQuoteContract.HistoricalQuoteEntry.COLUMN_VOLUME, historicalQuote.getVolume());
+
+
+        } else {
+            launchToastMessageOnMainThread(context);
+        }
+
+
+        return builder.build();
+    }
+
+    public static final int normalizeDateToPersist(String date) {
+        int normalizedDate = 0;
+        try {
+            normalizedDate = (int) new SimpleDateFormat("yyyy-MM-dd").parse(date).getTime();
+        } catch (ParseException e) {
+            Log.e(LOG_TAG, "Error while normalize date");
+        }
+
+        return normalizedDate;
+    }
+
     /**
      * Method that allow to show a Toast Message on the Main thread.
      * <p>
@@ -199,7 +239,7 @@ public class Utils {
      * @param params
      * @return
      */
-    public static String generateStockQuery(Context context, TaskParams params) {
+    public static String generateQuoteQuery(Context context, TaskParams params) {
         ContentResolver contentResolver = context.getContentResolver();
         StringBuffer query = new StringBuffer(BASE_QUERY);
 

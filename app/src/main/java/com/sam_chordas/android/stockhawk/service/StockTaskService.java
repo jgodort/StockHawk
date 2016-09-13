@@ -14,6 +14,8 @@ import com.sam_chordas.android.stockhawk.data.StockQuoteContract;
 import com.sam_chordas.android.stockhawk.rest.ServiceGenerator;
 import com.sam_chordas.android.stockhawk.rest.Utils;
 import com.sam_chordas.android.stockhawk.rest.client.YahooFinanceAPIClient;
+import com.sam_chordas.android.stockhawk.rest.model.HistoricalQuote;
+import com.sam_chordas.android.stockhawk.rest.model.HistoricalStockQuoteModel;
 import com.sam_chordas.android.stockhawk.rest.model.Quote;
 import com.sam_chordas.android.stockhawk.rest.model.StockQuoteModel;
 
@@ -73,6 +75,7 @@ public class StockTaskService extends GcmTaskService {
     private List<Quote> fetchData(String url) throws IOException {
         Log.d(LOG_TAG, "fetching data from the API.");
         Log.d(LOG_TAG, "QUERY: " + url);
+
         List<Quote> quoteList = null;
 
         Call<StockQuoteModel> call = yahooClient.getStocks(url);
@@ -86,6 +89,26 @@ public class StockTaskService extends GcmTaskService {
 
         return quoteList;
     }
+
+
+    private List<HistoricalQuote> fetchHistoricalData(String url) throws IOException {
+        Log.d(LOG_TAG, "Fetching historical data from the API.");
+        Log.d(LOG_TAG, "QUERY: " + url);
+
+        List<HistoricalQuote> quoteList = null;
+
+        Call<HistoricalStockQuoteModel> call = yahooClient.getHistorialStockData(url);
+        Response<HistoricalStockQuoteModel> response = call.execute();
+        if (response.isSuccessful()) {
+            Log.d(LOG_TAG, "The request to the REST API bring back " + response.body().query.getCount() + " HistoricalQuotes");
+            quoteList = response.body().query.getResults().getQuote();
+        } else {
+            Log.e(LOG_TAG, "The request to the REST API return an error");
+        }
+
+        return quoteList;
+    }
+
 
     @Override
     public int onRunTask(TaskParams params) {
@@ -104,12 +127,22 @@ public class StockTaskService extends GcmTaskService {
             isUpdate = true;
         }
         //Represents the query to fetch the data from the Yahoo API.
-        String queryYQL = Utils.generateStockQuery(mContext, params);
+        String queryYQL = Utils.generateQuoteQuery(mContext, params);
         try {
             List<Quote> fetchedQuotes = fetchData(queryYQL);
 
             if (fetchedQuotes != null && !fetchedQuotes.isEmpty()) {
                 storeOnDatabase(fetchedQuotes);
+
+                for (Quote itQuote : fetchedQuotes) {
+
+                    List<HistoricalQuote> historicalQuotes = fetchHistoricalData(Utils.generateHistoricalYQLQuery(itQuote.symbol));
+
+
+
+                }
+
+
             }
         } catch (IOException | RemoteException | OperationApplicationException e) {
             Log.e(LOG_TAG, e.getMessage());
@@ -140,6 +173,26 @@ public class StockTaskService extends GcmTaskService {
             mContext.getContentResolver().applyBatch(StockQuoteContract.CONTENT_AUTHORITY, inserts);
         }
 
+    }
+
+    private void storeOnDatabase(List<HistoricalQuote> historicalQuotes, int quoteId){
+        ArrayList<ContentProviderOperation> inserts = new ArrayList<>();
+
+        for (HistoricalQuote iterator : historicalQuotes) {
+
+            inserts.add(Utils.buildBatchOperation(iterator, quoteId,mContext));
+        }
+
+        if (!Collections.EMPTY_LIST.equals(inserts)) {
+            //perform a masive bulk insert
+            try {
+                mContext.getContentResolver().applyBatch(StockQuoteContract.CONTENT_AUTHORITY, inserts);
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            } catch (OperationApplicationException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
 }

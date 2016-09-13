@@ -49,7 +49,7 @@ public class QuoteCursorAdapter extends CursorRecyclerViewAdapter<QuoteCursorAda
         viewHolder.symbol.setText(cursor.getString(cursor.getColumnIndex(StockQuoteContract.StockQuoteEntry.COLUMN_SYMBOL)));
         viewHolder.bidPrice.setText(cursor.getString(cursor.getColumnIndex(StockQuoteContract.StockQuoteEntry.COLUMN_BID)));
         int sdk = Build.VERSION.SDK_INT;
-        if (cursor.getInt(cursor.getColumnIndex("is_up")) == 1) {
+        if (cursor.getInt(cursor.getColumnIndex(StockQuoteContract.StockQuoteEntry.COLUMN_ISUP)) == 1) {
             if (sdk < Build.VERSION_CODES.JELLY_BEAN) {
                 viewHolder.change.setBackgroundDrawable(
                         mContext.getResources().getDrawable(R.drawable.percent_change_pill_green));
@@ -67,9 +67,15 @@ public class QuoteCursorAdapter extends CursorRecyclerViewAdapter<QuoteCursorAda
             }
         }
         if (Utils.showPercent) {
-            viewHolder.change.setText(cursor.getString(cursor.getColumnIndex(StockQuoteContract.StockQuoteEntry.COLUMN_PERCENT_CHANGE)));
+            viewHolder.change.setText(
+                    cursor.getString(
+                            cursor.getColumnIndex(
+                                    StockQuoteContract.StockQuoteEntry.COLUMN_PERCENT_CHANGE)));
         } else {
-            viewHolder.change.setText(cursor.getString(cursor.getColumnIndex(StockQuoteContract.StockQuoteEntry.COLUMN_CHANGE)));
+            viewHolder.change.setText(
+                    cursor.getString(
+                            cursor.getColumnIndex(
+                                    StockQuoteContract.StockQuoteEntry.COLUMN_CHANGE)));
         }
 
 
@@ -82,6 +88,47 @@ public class QuoteCursorAdapter extends CursorRecyclerViewAdapter<QuoteCursorAda
         return cursor.getInt(cursor.getColumnIndex(StockQuoteContract.StockQuoteEntry._ID));
 
     }
+
+    public String getStockName(int position) {
+        Cursor cursor = getCursor();
+        cursor.moveToPosition(position);
+
+        return cursor.getString(cursor.getColumnIndex(StockQuoteContract.StockQuoteEntry.COLUMN_NAME));
+
+    }
+
+    public String getStockSymbol(int position) {
+        Cursor cursor = getCursor();
+        cursor.moveToPosition(position);
+
+        return cursor.getString(cursor.getColumnIndex(StockQuoteContract.StockQuoteEntry.COLUMN_SYMBOL));
+
+    }
+
+    public String getStockChange(int position) {
+        Cursor cursor = getCursor();
+        cursor.moveToPosition(position);
+
+        return cursor.getString(cursor.getColumnIndex(StockQuoteContract.StockQuoteEntry.COLUMN_CHANGE));
+
+    }
+
+    public String getStockBid(int position) {
+        Cursor cursor = getCursor();
+        cursor.moveToPosition(position);
+
+        return cursor.getString(cursor.getColumnIndex(StockQuoteContract.StockQuoteEntry.COLUMN_BID));
+
+    }
+
+    public String getStockPercentChange(int position) {
+        Cursor cursor = getCursor();
+        cursor.moveToPosition(position);
+
+        return cursor.getString(cursor.getColumnIndex(StockQuoteContract.StockQuoteEntry.COLUMN_PERCENT_CHANGE));
+
+    }
+
 
     @Override
     public void onItemDismiss(int position) {

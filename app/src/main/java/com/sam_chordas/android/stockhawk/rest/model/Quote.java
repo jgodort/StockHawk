@@ -1,9 +1,15 @@
 
 package com.sam_chordas.android.stockhawk.rest.model;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import com.google.gson.annotations.SerializedName;
 
-public class Quote {
+public class Quote implements Parcelable {
+
+
+    public int id;
 
     @SerializedName("Ask")
     public String ask;
@@ -82,6 +88,103 @@ public class Quote {
     public String stockExchange;
     @SerializedName("PercentChange")
     public String percentChange;
+
+    public Quote(int _id, String _symbol, String _name, String _bid, String _percentChange, String _change) {
+        id = _id;
+        symbol = _symbol;
+        name = _name;
+        bid = _bid;
+        percentChange = _percentChange;
+        change = _change;
+    }
+
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeInt(id);
+        dest.writeString(ask);
+        dest.writeString(averageDailyVolume);
+        dest.writeString(bid);
+        dest.writeString(bookValue);
+        dest.writeString(change);
+        dest.writeString(changeinPercent);
+        dest.writeString(changePercentChange);
+        dest.writeString(currency);
+        dest.writeString(daysHigh);
+        dest.writeString(daysLow);
+        dest.writeString(daysRange);
+        dest.writeString(earningsShare);
+        dest.writeString(lastTradeDate);
+        dest.writeString(lastTradePriceOnly);
+        dest.writeString(lastTradeTime);
+        dest.writeString(lastTradeWithTime);
+        dest.writeString(marketCapitalization);
+        dest.writeString(name);
+        dest.writeString(open);
+        dest.writeString(percentChange);
+        dest.writeString(previousClose);
+        dest.writeString(priceBook);
+        dest.writeString(priceSales);
+        dest.writeString(stockExchange);
+        dest.writeString(symbol);
+        dest.writeString(volume);
+        dest.writeString(yearHigh);
+        dest.writeString(yearLow);
+        dest.writeString(yearRange);
+
+    }
+
+    public static final Parcelable.Creator<Quote> CREATOR = new Parcelable.Creator<Quote>() {
+
+        @Override
+        public Quote createFromParcel(Parcel source) {
+            return new Quote(source);
+        }
+
+        @Override
+        public Quote[] newArray(int size) {
+            return new Quote[size];
+        }
+    };
+
+    private Quote(Parcel in) {
+        id = in.readInt();
+        ask = in.readString();
+        averageDailyVolume = in.readString();
+        bid = in.readString();
+        bookValue = in.readString();
+        change = in.readString();
+        changeinPercent = in.readString();
+        changePercentChange = in.readString();
+        currency = in.readString();
+        daysHigh = in.readString();
+        daysLow = in.readString();
+        daysRange = in.readString();
+        earningsShare = in.readString();
+        lastTradeDate = in.readString();
+        lastTradePriceOnly = in.readString();
+        lastTradeTime = in.readString();
+        lastTradeWithTime = in.readString();
+        marketCapitalization = in.readString();
+        name = in.readString();
+        open = in.readString();
+        percentChange = in.readString();
+        previousClose = in.readString();
+        priceBook = in.readString();
+        priceSales = in.readString();
+        stockExchange = in.readString();
+        symbol = in.readString();
+        volume = in.readString();
+        yearHigh = in.readString();
+        yearLow = in.readString();
+        yearRange = in.readString();
+    }
+
 
     public String getAsk() {
         return ask;
@@ -202,4 +305,6 @@ public class Quote {
     public String getPercentChange() {
         return percentChange;
     }
+
+
 }

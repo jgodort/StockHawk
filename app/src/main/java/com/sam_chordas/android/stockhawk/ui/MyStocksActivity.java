@@ -32,6 +32,7 @@ import com.sam_chordas.android.stockhawk.data.StockQuoteContract;
 import com.sam_chordas.android.stockhawk.rest.QuoteCursorAdapter;
 import com.sam_chordas.android.stockhawk.rest.RecyclerViewItemClickListener;
 import com.sam_chordas.android.stockhawk.rest.Utils;
+import com.sam_chordas.android.stockhawk.rest.model.Quote;
 import com.sam_chordas.android.stockhawk.service.StockIntentService;
 import com.sam_chordas.android.stockhawk.service.StockTaskService;
 import com.sam_chordas.android.stockhawk.touch_helper.SimpleItemTouchHelperCallback;
@@ -91,15 +92,24 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
         getLoaderManager().initLoader(CURSOR_LOADER_ID, null, this);
 
         mCursorAdapter = new QuoteCursorAdapter(this, null);
+
         recyclerView.addOnItemTouchListener(new RecyclerViewItemClickListener(this,
                 new RecyclerViewItemClickListener.OnItemClickListener() {
                     @Override
                     public void onItemClick(View v, int position) {
-                        //TODO:
-                        // do something on item click
+                        Quote quote = new Quote(
+                                mCursorAdapter.getStockId(position),
+                                mCursorAdapter.getStockSymbol(position),
+                                mCursorAdapter.getStockName(position),
+                                mCursorAdapter.getStockBid(position),
+                                mCursorAdapter.getStockPercentChange(position),
+                                mCursorAdapter.getStockChange(position));
+
 
                         Intent intent = new Intent(mContext, DetailActivity.class);
-                        intent.putExtra(SELECTED_STOCKQUOTE, mCursorAdapter.getStockId(position));
+                        Bundle arguments=new Bundle();
+                        arguments.putParcelable(SELECTED_STOCKQUOTE,quote);
+                        intent.putExtra(SELECTED_STOCKQUOTE,arguments);
 
                         mContext.startActivity(intent);
                     }
@@ -246,8 +256,10 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         // This narrows the return to only the stocks that are most current.
 
-        String[] projection = new String[]{StockQuoteContract.StockQuoteEntry._ID,
+        String[] projection = new String[]{
+                StockQuoteContract.StockQuoteEntry._ID,
                 StockQuoteContract.StockQuoteEntry.COLUMN_SYMBOL,
+                StockQuoteContract.StockQuoteEntry.COLUMN_NAME,
                 StockQuoteContract.StockQuoteEntry.COLUMN_BID,
                 StockQuoteContract.StockQuoteEntry.COLUMN_PERCENT_CHANGE,
                 StockQuoteContract.StockQuoteEntry.COLUMN_CHANGE,

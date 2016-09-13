@@ -28,9 +28,76 @@ public class StockQuoteContract {
 
     public static final String PATH_STOCKQUOTE = "stock_quote";
 
+    public static final String PATH_HISTORICAL_STOCKQUOTE = "historical_quote";
+
+
+    public static final class HistoricalQuoteEntry implements BaseColumns {
+
+        public static final Uri CONTENT_URI = BASE_CONTENT_URI.buildUpon().appendPath(PATH_HISTORICAL_STOCKQUOTE).build();
+
+        public static final String CONTENT_TYPE =
+                ContentResolver.CURSOR_DIR_BASE_TYPE +
+                        "/" + CONTENT_AUTHORITY + "/" + PATH_HISTORICAL_STOCKQUOTE;
+
+        public static final String CONTENT_ITEM_TYPE =
+                ContentResolver.CURSOR_ITEM_BASE_TYPE +
+                        "/" + CONTENT_AUTHORITY + "/" + PATH_HISTORICAL_STOCKQUOTE;
+
+
+        public static final String TABLE_NAME = "historicalquote";
+
+        public static final String COLUMN_QUOTE_ID = "quote_id";
+
+        public static final String COLUMN_SYMBOL = "symbol";
+
+        public static final String COLUMN_DATE = "date";
+
+        public static final String COLUMN_OPEN = "open";
+
+        public static final String COLUMN_HIGH = "high";
+
+        public static final String COLUMN_LOW = "low";
+
+        public static final String COLUMN_CLOSE = "close";
+
+        public static final String COLUMN_VOLUME = "volume";
+
+
+        /**
+         * Method that generate a uri filtering by the stock id.
+         *
+         * @param id
+         * @return
+         */
+        public static Uri buildHistoricalQuoteUri(long id) {
+            return ContentUris.withAppendedId(CONTENT_URI, id);
+        }
+
+        public static Uri buildHistoricalQuoteInRangeUri(String symbol, int startDate, int endDate) {
+            return CONTENT_URI.buildUpon().
+                    appendQueryParameter(COLUMN_SYMBOL, symbol).
+                    appendQueryParameter(COLUMN_DATE, String.valueOf(startDate)).
+                    appendQueryParameter(COLUMN_DATE, String.valueOf(endDate)).
+                    build();
+        }
+
+
+        public static String getSymbolFromUri(Uri uri) {
+            return uri.getQueryParameter(COLUMN_SYMBOL);
+        }
+
+        public static int getStartDateFromUri(Uri uri) {
+            return Integer.parseInt(uri.getPathSegments().get(1));
+        }
+
+        public static int getEndDateFromUri(Uri uri) {
+            return Integer.parseInt(uri.getPathSegments().get(2));
+        }
+    }
+
     public static final class StockQuoteEntry implements BaseColumns {
 
-        public static final Uri CONTENT_URI= BASE_CONTENT_URI.buildUpon().appendPath(PATH_STOCKQUOTE).build();
+        public static final Uri CONTENT_URI = BASE_CONTENT_URI.buildUpon().appendPath(PATH_STOCKQUOTE).build();
 
         public static final String CONTENT_TYPE =
                 ContentResolver.CURSOR_DIR_BASE_TYPE +
@@ -110,12 +177,17 @@ public class StockQuoteContract {
          * @return
          */
         public static Uri buildStockQuoteUri(long id) {
-            return ContentUris.withAppendedId(BASE_CONTENT_URI, id);
+            return ContentUris.withAppendedId(CONTENT_URI, id);
         }
 
         public static Uri buildStockQuoteSymbolUri(String symbol) {
-            return BASE_CONTENT_URI.buildUpon().
+            return CONTENT_URI.buildUpon().
                     appendQueryParameter(COLUMN_SYMBOL, symbol).build();
+        }
+
+        public static Uri buildStockQuotesSymbolUri(String symbols) {
+            return CONTENT_URI.buildUpon().
+                    appendQueryParameter(COLUMN_SYMBOL, symbols).build();
         }
 
 

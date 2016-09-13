@@ -16,6 +16,11 @@
     <string name="rangeLabel" translatable="true">Range</string>
     <string name="loading_message" translatable="true">Loading Historical Data...</string>
 
+    <string name="tab_label_one_month" translatable="true">1 Month</string>
+    <string name="tab_label_three_months" translatable="true">3 Months</string>
+    <string name="tab_label_six_months" translatable="true">6 Months</string>
+    <string name="tab_label_one_year" translatable="true">1 Year</string>
+
 
     <!-- A11y -->
     <string name="a11y_daily_low">Daily Low Value: <xliff:g id="dlv">%1$s</xliff:g></string>

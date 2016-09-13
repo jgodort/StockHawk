@@ -24,11 +24,22 @@ public class StockQuoteProvider extends ContentProvider {
 
     static final int STOCKQUOTE = 10;
     static final int STOCKQUOTE_WITH_SYMBOL = 11;
+    static final int HISTORICAL_QUOTE = 12;
+    static final int HISTORICAL_QUOTE_IN_RANGE = 13;
+
+
     private static final SQLiteQueryBuilder mQueryBuilder;
 
     static {
         mQueryBuilder = new SQLiteQueryBuilder();
-        mQueryBuilder.setTables(StockQuoteContract.StockQuoteEntry.TABLE_NAME);
+        mQueryBuilder.setTables(StockQuoteContract.StockQuoteEntry.TABLE_NAME + " INNER JOIN " +
+                StockQuoteContract.HistoricalQuoteEntry.TABLE_NAME +
+                " ON " + StockQuoteContract.StockQuoteEntry.TABLE_NAME +
+                "." + StockQuoteContract.StockQuoteEntry._ID +
+                " = " + StockQuoteContract.HistoricalQuoteEntry.TABLE_NAME +
+                "." + StockQuoteContract.HistoricalQuoteEntry.COLUMN_QUOTE_ID);
+
+
     }
 
     private static final String sStockQuoteSelection =
@@ -41,6 +52,32 @@ public class StockQuoteProvider extends ContentProvider {
             "." +
             StockQuoteContract.StockQuoteEntry.COLUMN_SYMBOL +
             " IN (?)";
+
+
+    private static final String sHistoricalQuoteSelection =
+            StockQuoteContract.HistoricalQuoteEntry.TABLE_NAME +
+                    "." +
+                    StockQuoteContract.HistoricalQuoteEntry.COLUMN_SYMBOL +
+                    " =? ";
+
+    private static final String sHistoricalQuotesSelection = StockQuoteContract.HistoricalQuoteEntry.TABLE_NAME +
+            "." +
+            StockQuoteContract.HistoricalQuoteEntry.COLUMN_SYMBOL +
+            " IN (?)";
+
+    public static final String sHistoricalQuoteBetweenDatesSelection = StockQuoteContract.HistoricalQuoteEntry.TABLE_NAME +
+            "." +
+            StockQuoteContract.HistoricalQuoteEntry.COLUMN_SYMBOL +
+            " =? " +
+            StockQuoteContract.HistoricalQuoteEntry.TABLE_NAME +
+            "." +
+            StockQuoteContract.HistoricalQuoteEntry.COLUMN_DATE +
+            " >= ? " +
+            " AND " +
+            StockQuoteContract.HistoricalQuoteEntry.TABLE_NAME +
+            "." +
+            StockQuoteContract.HistoricalQuoteEntry.COLUMN_DATE +
+            "<= ? ";
 
 
     /**
@@ -70,6 +107,21 @@ public class StockQuoteProvider extends ContentProvider {
                 sortOrder);
     }
 
+    private Cursor getHistoricalQuoteInRangeCursor(Uri uri, String[] projection, String selection, String sortOrder) {
+
+        String symbol = StockQuoteContract.HistoricalQuoteEntry.getSymbolFromUri(uri);
+        int startDate = StockQuoteContract.HistoricalQuoteEntry.getStartDateFromUri(uri);
+        int endDate = StockQuoteContract.HistoricalQuoteEntry.getEndDateFromUri(uri);
+
+        return mQueryBuilder.query(mStockQuoteDbHelper.getReadableDatabase(),
+                projection,
+                selection,
+                new String[]{symbol, String.valueOf(startDate), String.valueOf(endDate)},
+                null,
+                null,
+                sortOrder);
+    }
+
 
     @Override
     public boolean onCreate() {
@@ -87,10 +139,16 @@ public class StockQuoteProvider extends ContentProvider {
             case STOCKQUOTE:
                 retrievedCursor = getStockQuoteCursor(uri, projection, selection, selectionArgs, sortOrder);
                 break;
-
             case STOCKQUOTE_WITH_SYMBOL:
                 retrievedCursor = null;
                 break;
+            case HISTORICAL_QUOTE:
+                retrievedCursor = null;
+                break;
+            case HISTORICAL_QUOTE_IN_RANGE:
+                retrievedCursor = getHistoricalQuoteInRangeCursor(uri, projection, selection, sortOrder);
+                break;
+
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
 
@@ -111,6 +169,8 @@ public class StockQuoteProvider extends ContentProvider {
                 return StockQuoteContract.StockQuoteEntry.CONTENT_TYPE;
             case STOCKQUOTE_WITH_SYMBOL:
                 return StockQuoteContract.StockQuoteEntry.CONTENT_ITEM_TYPE;
+            case HISTORICAL_QUOTE_IN_RANGE:
+                return StockQuoteContract.HistoricalQuoteEntry.CONTENT_TYPE;
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
         }
@@ -134,6 +194,17 @@ public class StockQuoteProvider extends ContentProvider {
                     throw new SQLException("Failed to insert row into " + uri);
                 }
                 break;
+
+            case HISTORICAL_QUOTE:
+
+                long _idH = db.insert(StockQuoteContract.HistoricalQuoteEntry.TABLE_NAME, null, contentValues);
+                if (_idH > 0) {
+                    returnUri = StockQuoteContract.HistoricalQuoteEntry.buildHistoricalQuoteUri(_idH);
+                } else {
+                    throw new SQLException("Failed to insert row into " + uri);
+                }
+                break;
+
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
         }
@@ -157,6 +228,9 @@ public class StockQuoteProvider extends ContentProvider {
             case STOCKQUOTE:
                 rowsDeleted = db.delete(StockQuoteContract.StockQuoteEntry.TABLE_NAME, selection, selectionArgs);
                 break;
+            case HISTORICAL_QUOTE:
+                rowsDeleted = db.delete(StockQuoteContract.HistoricalQuoteEntry.TABLE_NAME, selection, selectionArgs);
+                break;
             default:
                 throw new UnsupportedOperationException("Unknown Uri: " + uri);
         }
@@ -178,6 +252,9 @@ public class StockQuoteProvider extends ContentProvider {
         switch (match) {
             case STOCKQUOTE:
                 rowsUpdated = db.update(StockQuoteContract.StockQuoteEntry.TABLE_NAME, contentValues, selection, selectionArgs);
+                break;
+            case HISTORICAL_QUOTE:
+                rowsUpdated = db.update(StockQuoteContract.HistoricalQuoteEntry.TABLE_NAME, contentValues, selection, selectionArgs);
                 break;
             default:
                 throw new UnsupportedOperationException("Unknown Uri: " + uri);
@@ -214,6 +291,24 @@ public class StockQuoteProvider extends ContentProvider {
 
                 getContext().getContentResolver().notifyChange(uri, null);
                 return returnedCount;
+
+            case HISTORICAL_QUOTE:
+                db.beginTransaction();
+                int returnedCountHistorical = 0;
+                try {
+                    for (ContentValues iterator : values) {
+                        Long _id = db.insert(StockQuoteContract.HistoricalQuoteEntry.TABLE_NAME, null, iterator);
+                        if (_id != -1) {
+                            returnedCountHistorical++;
+                        }
+                    }
+                    db.setTransactionSuccessful();
+                } finally {
+                    db.endTransaction();
+                }
+                getContext().getContentResolver().notifyChange(uri, null);
+                return returnedCountHistorical;
+
             default:
                 return super.bulkInsert(uri, values);
         }

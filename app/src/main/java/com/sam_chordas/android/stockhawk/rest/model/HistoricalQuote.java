@@ -9,6 +9,9 @@ import com.google.gson.annotations.SerializedName;
 
 public class HistoricalQuote {
 
+
+    public int quoteId;
+
     @SerializedName("Symbol")
     public String symbol;
     @SerializedName("Date")

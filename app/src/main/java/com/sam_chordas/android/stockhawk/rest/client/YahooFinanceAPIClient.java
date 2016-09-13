@@ -15,12 +15,12 @@ import retrofit2.http.Query;
 public interface YahooFinanceAPIClient {
 
 
+
     @GET("yql?format=json&diagnostics=true&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys")
     Call<StockQuoteModel> getStocks(@Query("q") String query);
 
     @GET("yql?&format=json&diagnostics=true&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys")
     Call<HistoricalStockQuoteModel> getHistorialStockData(@Query("q") String query);
-
 
 
 }
