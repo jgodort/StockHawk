@@ -86,7 +86,7 @@ public class StockQuoteDbHelper extends SQLiteOpenHelper {
 
                 // Set up the location column as a foreign key to location table.
                 " FOREIGN KEY (" + StockQuoteContract.HistoricalQuoteEntry.COLUMN_QUOTE_ID + ") REFERENCES " +
-                StockQuoteContract.StockQuoteEntry.TABLE_NAME + " (" + StockQuoteContract.StockQuoteEntry._ID + "), " +
+                StockQuoteContract.StockQuoteEntry.TABLE_NAME + " (" + StockQuoteContract.StockQuoteEntry._ID + ")" +
                 RIGHT_PARENTHESIS + ";";
 
 

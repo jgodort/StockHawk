@@ -247,7 +247,7 @@ public class Utils {
         if (params.getTag().equals("init") || params.getTag().equals("periodic") || params.getTag().equals("add")) {
             dataBaseCursor = contentResolver.query(
                     StockQuoteContract.StockQuoteEntry.CONTENT_URI,
-                    new String[]{"Distinct " + StockQuoteContract.StockQuoteEntry.COLUMN_SYMBOL},
+                    new String[]{"Distinct " + StockQuoteContract.StockQuoteEntry.TABLE_NAME + "." + StockQuoteContract.StockQuoteEntry.COLUMN_SYMBOL},
                     null,
                     null,
                     null);

@@ -1,6 +1,7 @@
 package com.sam_chordas.android.stockhawk.service;
 
 import android.content.ContentProviderOperation;
+import android.content.ContentProviderResult;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.OperationApplicationException;
@@ -135,14 +136,9 @@ public class StockTaskService extends GcmTaskService {
                 storeOnDatabase(fetchedQuotes);
 
                 for (Quote itQuote : fetchedQuotes) {
-
                     List<HistoricalQuote> historicalQuotes = fetchHistoricalData(Utils.generateHistoricalYQLQuery(itQuote.symbol));
-
-
-
+                    storeOnDatabase(historicalQuotes, itQuote.id);
                 }
-
-
             }
         } catch (IOException | RemoteException | OperationApplicationException e) {
             Log.e(LOG_TAG, e.getMessage());
@@ -170,17 +166,21 @@ public class StockTaskService extends GcmTaskService {
 
 
             //perform a masive bulk insert
-            mContext.getContentResolver().applyBatch(StockQuoteContract.CONTENT_AUTHORITY, inserts);
+            ContentProviderResult[] persitedEntities = mContext.getContentResolver().applyBatch(StockQuoteContract.CONTENT_AUTHORITY, inserts);
+
+            for(int i=0;i<persitedEntities.length;i++){
+                quotes.get(i).id=Integer.valueOf(persitedEntities[i].uri.getLastPathSegment());
+            }
         }
 
     }
 
-    private void storeOnDatabase(List<HistoricalQuote> historicalQuotes, int quoteId){
+    private void storeOnDatabase(List<HistoricalQuote> historicalQuotes, int quoteId) {
         ArrayList<ContentProviderOperation> inserts = new ArrayList<>();
 
         for (HistoricalQuote iterator : historicalQuotes) {
 
-            inserts.add(Utils.buildBatchOperation(iterator, quoteId,mContext));
+            inserts.add(Utils.buildBatchOperation(iterator, quoteId, mContext));
         }
 
         if (!Collections.EMPTY_LIST.equals(inserts)) {

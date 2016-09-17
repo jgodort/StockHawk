@@ -107,9 +107,9 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
 
 
                         Intent intent = new Intent(mContext, DetailActivity.class);
-                        Bundle arguments=new Bundle();
-                        arguments.putParcelable(SELECTED_STOCKQUOTE,quote);
-                        intent.putExtra(SELECTED_STOCKQUOTE,arguments);
+                        Bundle arguments = new Bundle();
+                        arguments.putParcelable(SELECTED_STOCKQUOTE, quote);
+                        intent.putExtra(SELECTED_STOCKQUOTE, arguments);
 
                         mContext.startActivity(intent);
                     }
@@ -257,13 +257,13 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
         // This narrows the return to only the stocks that are most current.
 
         String[] projection = new String[]{
-                StockQuoteContract.StockQuoteEntry._ID,
-                StockQuoteContract.StockQuoteEntry.COLUMN_SYMBOL,
-                StockQuoteContract.StockQuoteEntry.COLUMN_NAME,
-                StockQuoteContract.StockQuoteEntry.COLUMN_BID,
-                StockQuoteContract.StockQuoteEntry.COLUMN_PERCENT_CHANGE,
-                StockQuoteContract.StockQuoteEntry.COLUMN_CHANGE,
-                StockQuoteContract.StockQuoteEntry.COLUMN_ISUP};
+                StockQuoteContract.StockQuoteEntry.TABLE_NAME + "." + StockQuoteContract.StockQuoteEntry._ID,
+                StockQuoteContract.StockQuoteEntry.TABLE_NAME + "." + StockQuoteContract.StockQuoteEntry.COLUMN_SYMBOL,
+                StockQuoteContract.StockQuoteEntry.TABLE_NAME + "." + StockQuoteContract.StockQuoteEntry.COLUMN_NAME,
+                StockQuoteContract.StockQuoteEntry.TABLE_NAME + "." + StockQuoteContract.StockQuoteEntry.COLUMN_BID,
+                StockQuoteContract.StockQuoteEntry.TABLE_NAME + "." + StockQuoteContract.StockQuoteEntry.COLUMN_PERCENT_CHANGE,
+                StockQuoteContract.StockQuoteEntry.TABLE_NAME + "." + StockQuoteContract.StockQuoteEntry.COLUMN_CHANGE,
+                StockQuoteContract.StockQuoteEntry.TABLE_NAME + "." + StockQuoteContract.StockQuoteEntry.COLUMN_ISUP};
 
         return new CursorLoader(this, StockQuoteContract.StockQuoteEntry.CONTENT_URI,
                 projection,

@@ -109,7 +109,6 @@ public class StockQuoteContract {
 
         public static final String TABLE_NAME = "stockquote";
 
-
         public static final String COLUMN_ASK = "ask";
 
         public static final String COLUMN_AVERAGE_DAILY_VOLUME = "average_day_vol";
@@ -156,7 +155,6 @@ public class StockQuoteContract {
 
         public static final String COLUMN_SYMBOL = "symbol";
 
-
         public static final String COLUMN_VOLUME = "volume";
 
         public static final String COLUMN_YEAR_RANGE = "year_range";
@@ -189,7 +187,6 @@ public class StockQuoteContract {
             return CONTENT_URI.buildUpon().
                     appendQueryParameter(COLUMN_SYMBOL, symbols).build();
         }
-
 
     }
 
