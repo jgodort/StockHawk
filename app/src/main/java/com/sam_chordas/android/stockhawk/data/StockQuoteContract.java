@@ -188,6 +188,10 @@ public class StockQuoteContract {
                     appendQueryParameter(COLUMN_SYMBOL, symbols).build();
         }
 
+        public static String getSymbolFromUri(Uri uri) {
+            return uri.getQueryParameter(COLUMN_SYMBOL);
+        }
+
     }
 
 

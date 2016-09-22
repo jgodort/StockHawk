@@ -7,6 +7,7 @@ import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.os.Handler;
 import android.os.Looper;
+import android.support.annotation.NonNull;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -14,11 +15,12 @@ import com.google.android.gms.gcm.TaskParams;
 import com.sam_chordas.android.stockhawk.data.StockQuoteContract;
 import com.sam_chordas.android.stockhawk.rest.model.HistoricalQuote;
 import com.sam_chordas.android.stockhawk.rest.model.Quote;
+import com.sam_chordas.android.stockhawk.service.StockTaskService;
+import com.sam_chordas.android.stockhawk.ui.MyStocksActivity;
 
 import java.text.Format;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
@@ -31,6 +33,7 @@ public class Utils {
 
     private static final SimpleDateFormat FORMAT_DATE_YAHOO_SDF = new SimpleDateFormat("yyyy-MM-dd");
     public static final String FORMAT_DATE_YAHOO = "yyyy-MM-dd";
+    public static final int LAST_WEEK_VALUE = 7;
 
     private static final String HISTORICAL_BASE_QUERY = "select * from yahoo.finance.historicaldata";
     private static final String HISTORICAL_QUERY_CONDITION = " where symbol = ";
@@ -205,10 +208,6 @@ public class Utils {
      */
     public static String generateHistoricalYQLQuery(String quoteSymbol) {
 
-        GregorianCalendar calendar = new GregorianCalendar();
-
-        calendar.set(Calendar.DATE, 1);
-        calendar.set(Calendar.MONTH, 1);
 
         new SimpleDateFormat("yyyy-MM-dd");
 
@@ -219,7 +218,7 @@ public class Utils {
                 append("\"").
                 append(HISTORICAL_QUERY_START_DATE).
                 append("\"").
-                append(convertDateToString(calendar.getTime(), Utils.FORMAT_DATE_YAHOO)).//Start Date Value
+                append(convertDateToString(decreaseDaysToDate(new Date(), LAST_WEEK_VALUE), Utils.FORMAT_DATE_YAHOO)).//Start Date Value
                 append("\"").
                 append(HISTORICAL_QUERY_END_DATE).
                 append("\"").
@@ -243,39 +242,61 @@ public class Utils {
         ContentResolver contentResolver = context.getContentResolver();
         StringBuffer query = new StringBuffer(BASE_QUERY);
 
-        Cursor dataBaseCursor;
-        if (params.getTag().equals("init") || params.getTag().equals("periodic") || params.getTag().equals("add")) {
-            dataBaseCursor = contentResolver.query(
-                    StockQuoteContract.StockQuoteEntry.CONTENT_URI,
-                    new String[]{"Distinct " + StockQuoteContract.StockQuoteEntry.TABLE_NAME + "." + StockQuoteContract.StockQuoteEntry.COLUMN_SYMBOL},
-                    null,
-                    null,
-                    null);
+        Cursor dataBaseCursor = contentResolver.query(
+                StockQuoteContract.StockQuoteEntry.CONTENT_URI,
+                new String[]{"Distinct " + StockQuoteContract.StockQuoteEntry.TABLE_NAME + "." + StockQuoteContract.StockQuoteEntry.COLUMN_SYMBOL},
+                null,
+                null,
+                null);
+
+        if (params.getTag().equals(StockTaskService.INIT_PARAM) ||
+                params.getTag().equals(StockTaskService.PERIODIC_PARAM)) {
 
 
             if (dataBaseCursor != null && dataBaseCursor.getCount() > 0) {
-                DatabaseUtils.dumpCursor(dataBaseCursor);
-                dataBaseCursor.moveToFirst();
-                StringBuilder mStoredSymbols = new StringBuilder();
-                for (int i = 0; i < dataBaseCursor.getCount(); i++) {
-
-                    mStoredSymbols.append("\"" +
-                            dataBaseCursor.getString(dataBaseCursor.getColumnIndex("symbol")) + "\",");
-                    dataBaseCursor.moveToNext();
-                }
-                dataBaseCursor.close();
-                if (params.getTag().equals("add")) {
-                    // get symbol from params.getExtra and build query
-                    mStoredSymbols.append("\"" +
-                            params.getExtras().getString("symbol") + "\",");
-                }
+                StringBuilder mStoredSymbols = obtainQuoteSymbolsFromCursor(dataBaseCursor);
                 mStoredSymbols.replace(mStoredSymbols.length() - 1, mStoredSymbols.length(), ")");
                 query.append(mStoredSymbols.toString());
             } else {
+                Log.d(LOG_TAG, "generateQuoteQuery: Generating sample query");
                 query.append(SAMPLE_STOCK_QUOTES + ")");
+                Log.d(LOG_TAG, "generateQuoteQuery: " + query.toString());
+
             }
+        } else if (params.getTag().equals(StockTaskService.ADD_PARAM)) {
+            // To dealing with the the behaviour of the API when you try to
+            // retrieve only one quote (to retrive one quote you need to
+            // call another endpoint) we fetch from the database the stored
+            // quotes and update all.
+            StringBuilder mStoredSymbols = obtainQuoteSymbolsFromCursor(dataBaseCursor);
+            //mStoredSymbols.replace(mStoredSymbols.length() - 1, mStoredSymbols.length(), " ");
+            query.append(mStoredSymbols.toString());
+            Log.d(LOG_TAG, "generateQuoteQuery: Generating query to add quote:");
+            query.append("\"").append(params.getExtras().getString(MyStocksActivity.SYMBOL_KEY)).append("\"").append(")");
+            Log.d(LOG_TAG, "generateQuoteQuery: " + query.toString());
+        }
+
+        if (!dataBaseCursor.isClosed()) {
+            dataBaseCursor.close();
         }
         return query.toString();
+    }
+
+    @NonNull
+    private static StringBuilder obtainQuoteSymbolsFromCursor(Cursor dataBaseCursor) {
+        DatabaseUtils.dumpCursor(dataBaseCursor);
+        dataBaseCursor.moveToFirst();
+        StringBuilder mStoredSymbols = new StringBuilder();
+        for (int i = 0; i < dataBaseCursor.getCount(); i++) {
+
+            mStoredSymbols.append("\"").append(dataBaseCursor.getString(
+                    dataBaseCursor.getColumnIndex(StockQuoteContract.StockQuoteEntry.COLUMN_SYMBOL)))
+                    .append("\",");
+
+            dataBaseCursor.moveToNext();
+        }
+        dataBaseCursor.close();
+        return mStoredSymbols;
     }
 
 
@@ -297,4 +318,22 @@ public class Utils {
         Format formatter = new SimpleDateFormat(format);
         return formatter.format(date);
     }
+
+    /**
+     *
+     */
+    public static Date decreaseDaysToDate(Date date, int numberOfDays) {
+        return addDaysToDate(date, numberOfDays * (-1));
+    }
+
+    /**
+     *
+     */
+    public static Date addDaysToDate(Date date, int numberOfDays) {
+        GregorianCalendar grCal = new GregorianCalendar();
+        grCal.setTime(date);
+        grCal.add(GregorianCalendar.DAY_OF_MONTH, numberOfDays);
+        return grCal.getTime();
+    }
+
 }

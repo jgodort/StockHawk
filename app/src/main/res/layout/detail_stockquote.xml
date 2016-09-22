@@ -58,9 +58,6 @@
                 </LinearLayout>
 
             </android.support.v7.widget.Toolbar>
-
-
-
         </LinearLayout>
     </android.support.v4.widget.NestedScrollView>
 

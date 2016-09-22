@@ -34,7 +34,15 @@ import retrofit2.Response;
  * and is used for the initialization and adding task as well.
  */
 public class StockTaskService extends GcmTaskService {
+
+
     private String LOG_TAG = StockTaskService.class.getSimpleName();
+
+    public static final String INIT_PARAM = "init";
+
+    public static final String PERIODIC_PARAM = "periodic";
+
+    public static final String ADD_PARAM = "add";
 
 
     /**
@@ -122,9 +130,9 @@ public class StockTaskService extends GcmTaskService {
         }
 
         //check if is update
-        if (params.getTag().equals("init") ||
-                params.getTag().equals("periodic") ||
-                params.getTag().equals("add")) {
+        if (params.getTag().equals(INIT_PARAM) ||
+                params.getTag().equals(PERIODIC_PARAM) ||
+                params.getTag().equals(ADD_PARAM)) {
             isUpdate = true;
         }
         //Represents the query to fetch the data from the Yahoo API.
@@ -168,14 +176,14 @@ public class StockTaskService extends GcmTaskService {
             //perform a masive bulk insert
             ContentProviderResult[] persitedEntities = mContext.getContentResolver().applyBatch(StockQuoteContract.CONTENT_AUTHORITY, inserts);
 
-            for(int i=0;i<persitedEntities.length;i++){
-                quotes.get(i).id=Integer.valueOf(persitedEntities[i].uri.getLastPathSegment());
+            for (int i = 0; i < persitedEntities.length; i++) {
+                quotes.get(i).id = Integer.valueOf(persitedEntities[i].uri.getLastPathSegment());
             }
         }
 
     }
 
-    private void storeOnDatabase(List<HistoricalQuote> historicalQuotes, int quoteId) {
+    private void storeOnDatabase(List<HistoricalQuote> historicalQuotes, int quoteId) throws RemoteException, OperationApplicationException {
         ArrayList<ContentProviderOperation> inserts = new ArrayList<>();
 
         for (HistoricalQuote iterator : historicalQuotes) {
@@ -185,13 +193,7 @@ public class StockTaskService extends GcmTaskService {
 
         if (!Collections.EMPTY_LIST.equals(inserts)) {
             //perform a masive bulk insert
-            try {
-                mContext.getContentResolver().applyBatch(StockQuoteContract.CONTENT_AUTHORITY, inserts);
-            } catch (RemoteException e) {
-                e.printStackTrace();
-            } catch (OperationApplicationException e) {
-                e.printStackTrace();
-            }
+            mContext.getContentResolver().applyBatch(StockQuoteContract.CONTENT_AUTHORITY, inserts);
         }
     }
 

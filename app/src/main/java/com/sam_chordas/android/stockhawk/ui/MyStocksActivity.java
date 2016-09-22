@@ -9,6 +9,7 @@ import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -29,19 +30,56 @@ import com.google.android.gms.gcm.Task;
 import com.melnykov.fab.FloatingActionButton;
 import com.sam_chordas.android.stockhawk.R;
 import com.sam_chordas.android.stockhawk.data.StockQuoteContract;
+import com.sam_chordas.android.stockhawk.data.StockQuoteProvider;
 import com.sam_chordas.android.stockhawk.rest.QuoteCursorAdapter;
 import com.sam_chordas.android.stockhawk.rest.RecyclerViewItemClickListener;
 import com.sam_chordas.android.stockhawk.rest.Utils;
+import com.sam_chordas.android.stockhawk.rest.model.HistoricalQuote;
 import com.sam_chordas.android.stockhawk.rest.model.Quote;
 import com.sam_chordas.android.stockhawk.service.StockIntentService;
 import com.sam_chordas.android.stockhawk.service.StockTaskService;
 import com.sam_chordas.android.stockhawk.touch_helper.SimpleItemTouchHelperCallback;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
 public class MyStocksActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
     public static final String SELECTED_STOCKQUOTE = "S_STQ";
+    public static final String HISTORICAL_DATA_BUNDLE_KEY = "S_HD";
+
+    public static final String TAG_KEY = "tag";
+    public static final String SYMBOL_KEY = "symbol";
+
+
+    private static final String[] HISTORICAL_COLUMNS = {
+            StockQuoteContract.HistoricalQuoteEntry.TABLE_NAME + "." + StockQuoteContract.HistoricalQuoteEntry._ID,
+            StockQuoteContract.HistoricalQuoteEntry.TABLE_NAME + "." + StockQuoteContract.HistoricalQuoteEntry.COLUMN_SYMBOL,
+            StockQuoteContract.HistoricalQuoteEntry.TABLE_NAME + "." + StockQuoteContract.HistoricalQuoteEntry.COLUMN_DATE,
+            StockQuoteContract.HistoricalQuoteEntry.TABLE_NAME + "." + StockQuoteContract.HistoricalQuoteEntry.COLUMN_OPEN,
+            StockQuoteContract.HistoricalQuoteEntry.TABLE_NAME + "." + StockQuoteContract.HistoricalQuoteEntry.COLUMN_CLOSE,
+            StockQuoteContract.HistoricalQuoteEntry.TABLE_NAME + "." + StockQuoteContract.HistoricalQuoteEntry.COLUMN_LOW,
+            StockQuoteContract.HistoricalQuoteEntry.TABLE_NAME + "." + StockQuoteContract.HistoricalQuoteEntry.COLUMN_HIGH,
+            StockQuoteContract.HistoricalQuoteEntry.TABLE_NAME + "." + StockQuoteContract.HistoricalQuoteEntry.COLUMN_VOLUME
+
+    };
+
+
+    private static final String[] QUOTE_COLUMNS = {
+            StockQuoteContract.StockQuoteEntry.TABLE_NAME + "." + StockQuoteContract.StockQuoteEntry._ID,
+            StockQuoteContract.StockQuoteEntry.TABLE_NAME + "." + StockQuoteContract.StockQuoteEntry.COLUMN_SYMBOL,
+            StockQuoteContract.StockQuoteEntry.TABLE_NAME + "." + StockQuoteContract.StockQuoteEntry.COLUMN_NAME,
+            StockQuoteContract.StockQuoteEntry.TABLE_NAME + "." + StockQuoteContract.StockQuoteEntry.COLUMN_DAYS_HIGH,
+            StockQuoteContract.StockQuoteEntry.TABLE_NAME + "." + StockQuoteContract.StockQuoteEntry.COLUMN_DAYS_LOW,
+            StockQuoteContract.StockQuoteEntry.TABLE_NAME + "." + StockQuoteContract.StockQuoteEntry.COLUMN_YEAR_HIGH,
+            StockQuoteContract.StockQuoteEntry.TABLE_NAME + "." + StockQuoteContract.StockQuoteEntry.COLUMN_YEAR_LOW,
+            StockQuoteContract.StockQuoteEntry.TABLE_NAME + "." + StockQuoteContract.StockQuoteEntry.COLUMN_BID,
+            StockQuoteContract.StockQuoteEntry.TABLE_NAME + "." + StockQuoteContract.StockQuoteEntry.COLUMN_CHANGE,
+            StockQuoteContract.StockQuoteEntry.TABLE_NAME + "." + StockQuoteContract.StockQuoteEntry.COLUMN_CHANGE_PERCENT,
+
+    };
 
     /**
      * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
@@ -81,7 +119,7 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
         mServiceIntent = new Intent(this, StockIntentService.class);
         if (savedInstanceState == null) {
             // Run the initialize task service so that some stocks appear upon an empty database
-            mServiceIntent.putExtra("tag", "init");
+            mServiceIntent.putExtra(TAG_KEY, StockTaskService.INIT_PARAM);
             if (checkInternetConnectionAvailable()) {
                 startService(mServiceIntent);
             } else {
@@ -97,21 +135,8 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
                 new RecyclerViewItemClickListener.OnItemClickListener() {
                     @Override
                     public void onItemClick(View v, int position) {
-                        Quote quote = new Quote(
-                                mCursorAdapter.getStockId(position),
-                                mCursorAdapter.getStockSymbol(position),
-                                mCursorAdapter.getStockName(position),
-                                mCursorAdapter.getStockBid(position),
-                                mCursorAdapter.getStockPercentChange(position),
-                                mCursorAdapter.getStockChange(position));
 
-
-                        Intent intent = new Intent(mContext, DetailActivity.class);
-                        Bundle arguments = new Bundle();
-                        arguments.putParcelable(SELECTED_STOCKQUOTE, quote);
-                        intent.putExtra(SELECTED_STOCKQUOTE, arguments);
-
-                        mContext.startActivity(intent);
+                        prepareDetailIntentData(position);
                     }
                 }));
         recyclerView.setAdapter(mCursorAdapter);
@@ -129,12 +154,15 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
                             .input(R.string.input_hint, R.string.input_prefill, new MaterialDialog.InputCallback() {
                                 @Override
                                 public void onInput(MaterialDialog dialog, CharSequence input) {
+
                                     // On FAB click, receive user input. Make sure the stock doesn't already exist
                                     // in the DB and proceed accordingly
-                                    Cursor c = getContentResolver().query(StockQuoteContract.StockQuoteEntry.CONTENT_URI,
-                                            new String[]{StockQuoteContract.StockQuoteEntry.COLUMN_SYMBOL},
-                                            StockQuoteContract.StockQuoteEntry.COLUMN_SYMBOL + "= ?",
-                                            new String[]{input.toString()}, null);
+                                    Cursor c = getContentResolver().query(
+                                            StockQuoteContract.StockQuoteEntry.buildStockQuoteSymbolUri(input.toString()),
+                                            new String[]{"DISTINCT " + StockQuoteContract.StockQuoteEntry.TABLE_NAME + "." + StockQuoteContract.StockQuoteEntry.COLUMN_SYMBOL},
+                                            StockQuoteProvider.sStockQuoteSelection,
+                                            null,
+                                            null);
                                     if (c.getCount() != 0) {
                                         Toast toast =
                                                 Toast.makeText(MyStocksActivity.this, "This stock is already saved!",
@@ -144,8 +172,8 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
                                         return;
                                     } else {
                                         // Add the stock to DB
-                                        mServiceIntent.putExtra("tag", "add");
-                                        mServiceIntent.putExtra("symbol", input.toString());
+                                        mServiceIntent.putExtra(TAG_KEY, StockTaskService.ADD_PARAM);
+                                        mServiceIntent.putExtra(SYMBOL_KEY, input.toString());
                                         startService(mServiceIntent);
                                     }
                                 }
@@ -166,6 +194,75 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
         if (checkInternetConnectionAvailable()) {
             configurePeriodicTask();
         }
+    }
+
+    private void prepareDetailIntentData(int position) {
+        Bundle arguments = new Bundle();
+
+        String selection = StockQuoteContract.HistoricalQuoteEntry.TABLE_NAME + "." +
+                StockQuoteContract.HistoricalQuoteEntry.COLUMN_QUOTE_ID + "=?";
+
+        Cursor historicData = getContentResolver().query(StockQuoteContract.HistoricalQuoteEntry.CONTENT_URI,
+                HISTORICAL_COLUMNS,
+                selection,
+                new String[]{String.valueOf(mCursorAdapter.getStockId(position))},
+                null);
+
+        String selectionQuote = StockQuoteContract.StockQuoteEntry.TABLE_NAME + "." +
+                StockQuoteContract.StockQuoteEntry._ID + "=?";
+        Cursor quoteCursor = getContentResolver().query(StockQuoteContract.StockQuoteEntry.CONTENT_URI,
+                QUOTE_COLUMNS,
+                selectionQuote,
+                new String[]{String.valueOf(mCursorAdapter.getStockId(position))},
+                null);
+
+
+        if (historicData != null && historicData.moveToFirst()) {
+            List<HistoricalQuote> historicalQuotes = new ArrayList<HistoricalQuote>();
+            for (int i = 0; i < historicData.getCount(); i++) {
+                HistoricalQuote hQuote = new HistoricalQuote();
+                hQuote.date = historicData.getString(historicData.getColumnIndex(StockQuoteContract.HistoricalQuoteEntry.COLUMN_DATE));
+                hQuote.open = historicData.getString(historicData.getColumnIndex(StockQuoteContract.HistoricalQuoteEntry.COLUMN_OPEN));
+                hQuote.close = historicData.getString(historicData.getColumnIndex(StockQuoteContract.HistoricalQuoteEntry.COLUMN_CLOSE));
+                hQuote.high = historicData.getString(historicData.getColumnIndex(StockQuoteContract.HistoricalQuoteEntry.COLUMN_HIGH));
+                hQuote.low = historicData.getString(historicData.getColumnIndex(StockQuoteContract.HistoricalQuoteEntry.COLUMN_LOW));
+                hQuote.volume = historicData.getString(historicData.getColumnIndex(StockQuoteContract.HistoricalQuoteEntry.COLUMN_VOLUME));
+
+                historicalQuotes.add(hQuote);
+            }
+            historicData.close();
+
+            if (!historicalQuotes.isEmpty()) {
+                arguments.putParcelableArrayList(HISTORICAL_DATA_BUNDLE_KEY, (ArrayList<? extends Parcelable>) historicalQuotes);
+            }
+        }
+
+
+        if (quoteCursor != null && quoteCursor.moveToFirst()) {
+
+
+            Quote quote = new Quote(
+                    quoteCursor.getInt(quoteCursor.getColumnIndex(StockQuoteContract.StockQuoteEntry._ID)),
+                    quoteCursor.getString(quoteCursor.getColumnIndex(StockQuoteContract.StockQuoteEntry.COLUMN_SYMBOL)),
+                    quoteCursor.getString(quoteCursor.getColumnIndex(StockQuoteContract.StockQuoteEntry.COLUMN_NAME)),
+                    quoteCursor.getString(quoteCursor.getColumnIndex(StockQuoteContract.StockQuoteEntry.COLUMN_BID)),
+                    quoteCursor.getString(quoteCursor.getColumnIndex(StockQuoteContract.StockQuoteEntry.COLUMN_CHANGE_PERCENT)),
+                    quoteCursor.getString(quoteCursor.getColumnIndex(StockQuoteContract.StockQuoteEntry.COLUMN_CHANGE)));
+            quote.daysHigh = quoteCursor.getString(quoteCursor.getColumnIndex(StockQuoteContract.StockQuoteEntry.COLUMN_DAYS_HIGH));
+            quote.daysLow = quoteCursor.getString(quoteCursor.getColumnIndex(StockQuoteContract.StockQuoteEntry.COLUMN_DAYS_LOW));
+            quote.yearHigh = quoteCursor.getString(quoteCursor.getColumnIndex(StockQuoteContract.StockQuoteEntry.COLUMN_YEAR_HIGH));
+            quote.yearLow = quoteCursor.getString(quoteCursor.getColumnIndex(StockQuoteContract.StockQuoteEntry.COLUMN_YEAR_LOW));
+
+            arguments.putParcelable(SELECTED_STOCKQUOTE, quote);
+
+            quoteCursor.close();
+        }
+
+
+        Intent intent = new Intent(mContext, DetailActivity.class);
+        intent.putExtra(SELECTED_STOCKQUOTE, arguments);
+
+        mContext.startActivity(intent);
     }
 
     /**
@@ -257,8 +354,8 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
         // This narrows the return to only the stocks that are most current.
 
         String[] projection = new String[]{
+                "DISTINCT " + StockQuoteContract.StockQuoteEntry.TABLE_NAME + "." + StockQuoteContract.StockQuoteEntry.COLUMN_SYMBOL,
                 StockQuoteContract.StockQuoteEntry.TABLE_NAME + "." + StockQuoteContract.StockQuoteEntry._ID,
-                StockQuoteContract.StockQuoteEntry.TABLE_NAME + "." + StockQuoteContract.StockQuoteEntry.COLUMN_SYMBOL,
                 StockQuoteContract.StockQuoteEntry.TABLE_NAME + "." + StockQuoteContract.StockQuoteEntry.COLUMN_NAME,
                 StockQuoteContract.StockQuoteEntry.TABLE_NAME + "." + StockQuoteContract.StockQuoteEntry.COLUMN_BID,
                 StockQuoteContract.StockQuoteEntry.TABLE_NAME + "." + StockQuoteContract.StockQuoteEntry.COLUMN_PERCENT_CHANGE,
@@ -267,7 +364,7 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
 
         return new CursorLoader(this, StockQuoteContract.StockQuoteEntry.CONTENT_URI,
                 projection,
-                StockQuoteContract.StockQuoteEntry.COLUMN_ISCURRENT + " = ?",
+                StockQuoteContract.StockQuoteEntry.TABLE_NAME + "." + StockQuoteContract.StockQuoteEntry.COLUMN_ISCURRENT + " = ?",
                 new String[]{"1"},
                 null);
     }

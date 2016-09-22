@@ -1,5 +1,8 @@
 package com.sam_chordas.android.stockhawk.rest.model;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import com.google.gson.annotations.SerializedName;
 
 /**
@@ -7,11 +10,12 @@ import com.google.gson.annotations.SerializedName;
  * Email: jgodort.software@gmail.com
  */
 
-public class HistoricalQuote {
+public class HistoricalQuote implements Parcelable {
 
 
     public int quoteId;
 
+    public int id;
     @SerializedName("Symbol")
     public String symbol;
     @SerializedName("Date")
@@ -28,6 +32,23 @@ public class HistoricalQuote {
     public String volume;
     @SerializedName("Adj_Close")
     public String adjClose;
+
+    public HistoricalQuote(){
+
+    }
+
+    public HistoricalQuote(Parcel source) {
+        super();
+        id=source.readInt();
+        symbol=source.readString();
+        date=source.readString();
+        open=source.readString();
+        high=source.readString();
+        low=source.readString();
+        close=source.readString();
+        volume=source.readString();
+        adjClose=source.readString();
+    }
 
 
     public String getSymbol() {
@@ -61,4 +82,42 @@ public class HistoricalQuote {
     public String getAdjClose() {
         return adjClose;
     }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeInt(id);
+        dest.writeString(symbol);
+        dest.writeString(date);
+        dest.writeString(open);
+        dest.writeString(high);
+        dest.writeString(low);
+        dest.writeString(close);
+        dest.writeString(volume);
+        dest.writeString(adjClose);
+
+
+    }
+
+    public static final Parcelable.Creator<HistoricalQuote> CREATOR = new Parcelable.Creator<HistoricalQuote>() {
+
+        @Override
+        public HistoricalQuote createFromParcel(Parcel source) {
+            return new HistoricalQuote(source);
+        }
+
+        @Override
+        public HistoricalQuote[] newArray(int size) {
+            return new HistoricalQuote[size];
+        }
+    };
+
+
+
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+
 }

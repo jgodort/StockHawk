@@ -24,7 +24,7 @@ public class StockQuoteDbHelper extends SQLiteOpenHelper {
     private static final String RIGHT_PARENTHESIS = " ) ";
 
 
-    private static final int DATABASE_VERSION = 2;
+    private static final int DATABASE_VERSION = 4;
 
     static final String DATABASE_NAME = "stockquote.db";
 
@@ -68,7 +68,9 @@ public class StockQuoteDbHelper extends SQLiteOpenHelper {
                 StockQuoteContract.StockQuoteEntry.COLUMN_YEAR_LOW + TEXT + NOT_NULL + COMMA +
                 StockQuoteContract.StockQuoteEntry.COLUMN_YEAR_RANGE + TEXT + NOT_NULL + COMMA +
                 StockQuoteContract.StockQuoteEntry.COLUMN_ISCURRENT + INTEGER + NOT_NULL + COMMA +
-                StockQuoteContract.StockQuoteEntry.COLUMN_ISUP + INTEGER + NOT_NULL +
+                StockQuoteContract.StockQuoteEntry.COLUMN_ISUP + INTEGER + NOT_NULL + COMMA +
+                // To assure the application have just one quote symbol entry it's created a UNIQUE constraint with REPLACE strategy
+                " UNIQUE (" + StockQuoteContract.StockQuoteEntry.COLUMN_SYMBOL + ") ON CONFLICT REPLACE " +
                 RIGHT_PARENTHESIS + ";";
 
 
@@ -83,7 +85,9 @@ public class StockQuoteDbHelper extends SQLiteOpenHelper {
                 StockQuoteContract.HistoricalQuoteEntry.COLUMN_LOW + TEXT + NOT_NULL + COMMA +
                 StockQuoteContract.HistoricalQuoteEntry.COLUMN_CLOSE + TEXT + NOT_NULL + COMMA +
                 StockQuoteContract.HistoricalQuoteEntry.COLUMN_VOLUME + TEXT + NOT_NULL + COMMA +
-
+                " UNIQUE (" + StockQuoteContract.HistoricalQuoteEntry.COLUMN_SYMBOL + ", " +
+                StockQuoteContract.HistoricalQuoteEntry.COLUMN_DATE +
+                ") ON CONFLICT REPLACE " + COMMA +
                 // Set up the location column as a foreign key to location table.
                 " FOREIGN KEY (" + StockQuoteContract.HistoricalQuoteEntry.COLUMN_QUOTE_ID + ") REFERENCES " +
                 StockQuoteContract.StockQuoteEntry.TABLE_NAME + " (" + StockQuoteContract.StockQuoteEntry._ID + ")" +

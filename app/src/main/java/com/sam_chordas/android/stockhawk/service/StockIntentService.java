@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.util.Log;
 
 import com.google.android.gms.gcm.TaskParams;
+import com.sam_chordas.android.stockhawk.ui.MyStocksActivity;
 
 /**
  * Created by sam_chordas on 10/1/15.
@@ -25,12 +26,12 @@ public class StockIntentService extends IntentService {
         Log.d(StockIntentService.class.getSimpleName(), "Stock Intent Service");
         StockTaskService stockTaskService = new StockTaskService(this);
         Bundle args = new Bundle();
-        if (intent.getStringExtra("tag").equals("add")) {
-            args.putString("symbol", intent.getStringExtra("symbol"));
+        if (intent.getStringExtra(MyStocksActivity.TAG_KEY).equals(StockTaskService.ADD_PARAM)) {
+            args.putString(MyStocksActivity.SYMBOL_KEY, intent.getStringExtra(MyStocksActivity.SYMBOL_KEY));
         }
         // We can call OnRunTask from the intent service to force it to run immediately instead of
         // scheduling a task.
-        stockTaskService.onRunTask(new TaskParams(intent.getStringExtra("tag"), args));
+        stockTaskService.onRunTask(new TaskParams(intent.getStringExtra(MyStocksActivity.TAG_KEY), args));
 
     }
 }

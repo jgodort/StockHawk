@@ -50,9 +50,10 @@ public class DetailActivity extends AppCompatActivity {
         setContentView(R.layout.activity_detail);
         ButterKnife.bind(this);
 
-        Quote quote = (Quote) getIntent().getBundleExtra(MyStocksActivity.SELECTED_STOCKQUOTE).get(MyStocksActivity.SELECTED_STOCKQUOTE);
+        Bundle arguments = getIntent().getBundleExtra(MyStocksActivity.SELECTED_STOCKQUOTE);
 
-        int selectedQuoteId = quote.id;
+        Quote quote = (Quote) arguments.get(MyStocksActivity.SELECTED_STOCKQUOTE);
+
         quoteName.setText(quote.getName());
         quoteBidPrice.setText(quote.getBid());
         quoteSymbol.setText(quote.getSymbol());
@@ -62,22 +63,24 @@ public class DetailActivity extends AppCompatActivity {
 
         Bundle bundleOneMonth = new Bundle();
         bundleOneMonth.putString(TabFragment.CRITERIA_TIME_KEY, TabFragment.ONE_MONTH_CRITERIA);
-        bundleOneMonth.putInt(TabFragment.SELECTED_QUOTE, selectedQuoteId);
+        bundleOneMonth.putParcelable(TabFragment.SELECTED_QUOTE, quote);
+        bundleOneMonth.putParcelableArrayList(MyStocksActivity.HISTORICAL_DATA_BUNDLE_KEY,
+                arguments.getParcelableArrayList(MyStocksActivity.HISTORICAL_DATA_BUNDLE_KEY));
         tabsFragments.add(TabFragment.instantiate(this, TabFragment.class.getName(), bundleOneMonth));
 
         Bundle bundleThreeMonth = new Bundle();
         bundleThreeMonth.putString(TabFragment.CRITERIA_TIME_KEY, TabFragment.THREE_MONTH_CRITERIA);
-        bundleThreeMonth.putInt(TabFragment.SELECTED_QUOTE, selectedQuoteId);
+        bundleThreeMonth.putParcelable(TabFragment.SELECTED_QUOTE, quote);
         tabsFragments.add(TabFragment.instantiate(this, TabFragment.class.getName(), bundleThreeMonth));
 
         Bundle bundleSixMonth = new Bundle();
         bundleSixMonth.putString(TabFragment.CRITERIA_TIME_KEY, TabFragment.SIX_MONTH_CRITERIA);
-        bundleSixMonth.putInt(TabFragment.SELECTED_QUOTE, selectedQuoteId);
+        bundleSixMonth.putParcelable(TabFragment.SELECTED_QUOTE, quote);
         tabsFragments.add(TabFragment.instantiate(this, TabFragment.class.getName(), bundleSixMonth));
 
         Bundle bundleOneYear = new Bundle();
         bundleOneYear.putString(TabFragment.CRITERIA_TIME_KEY, TabFragment.ONE_YEAR_CRITERIA);
-        bundleOneYear.putInt(TabFragment.SELECTED_QUOTE, selectedQuoteId);
+        bundleOneYear.putParcelable(TabFragment.SELECTED_QUOTE, quote);
         tabsFragments.add(TabFragment.instantiate(this, TabFragment.class.getName(), bundleOneYear));
 
 
@@ -85,6 +88,8 @@ public class DetailActivity extends AppCompatActivity {
         viewPager.setAdapter(viewPagerAdapter);
 
         viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
+        tabLayout.setupWithViewPager(viewPager);
+
 
 
     }

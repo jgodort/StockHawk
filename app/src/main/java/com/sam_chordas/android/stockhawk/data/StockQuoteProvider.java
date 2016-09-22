@@ -10,6 +10,7 @@ import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.Log;
 
 /**
  * Created by Javier Godino on 01/09/2016.
@@ -17,6 +18,8 @@ import android.support.annotation.Nullable;
  */
 
 public class StockQuoteProvider extends ContentProvider {
+
+    private static final String LOG_TAG = StockQuoteProvider.class.getName();
 
 
     private static final UriMatcher mUriMatcher = buildUriMatcher();
@@ -38,11 +41,9 @@ public class StockQuoteProvider extends ContentProvider {
                 "." + StockQuoteContract.StockQuoteEntry._ID +
                 " = " + StockQuoteContract.HistoricalQuoteEntry.TABLE_NAME +
                 "." + StockQuoteContract.HistoricalQuoteEntry.COLUMN_QUOTE_ID);
-
-
     }
 
-    private static final String sStockQuoteSelection =
+    public static final String sStockQuoteSelection =
             StockQuoteContract.StockQuoteEntry.TABLE_NAME +
                     "." +
                     StockQuoteContract.StockQuoteEntry.COLUMN_SYMBOL +
@@ -91,12 +92,25 @@ public class StockQuoteProvider extends ContentProvider {
 
         matcher.addURI(authority, StockQuoteContract.PATH_STOCKQUOTE, STOCKQUOTE);
         matcher.addURI(authority, StockQuoteContract.PATH_STOCKQUOTE + "/*", STOCKQUOTE_WITH_SYMBOL);
+        matcher.addURI(authority, StockQuoteContract.PATH_HISTORICAL_STOCKQUOTE, HISTORICAL_QUOTE);
+        matcher.addURI(authority, StockQuoteContract.PATH_HISTORICAL_STOCKQUOTE + "/*", HISTORICAL_QUOTE_IN_RANGE);
 
         return matcher;
 
     }
 
     private Cursor getStockQuoteCursor(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
+
+        return mQueryBuilder.query(mStockQuoteDbHelper.getReadableDatabase(),
+                projection,
+                selection,
+                selectionArgs,
+                null,
+                null,
+                sortOrder);
+    }
+
+    private Cursor getHistoricalQuoteCursor(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
 
         return mQueryBuilder.query(mStockQuoteDbHelper.getReadableDatabase(),
                 projection,
@@ -143,12 +157,11 @@ public class StockQuoteProvider extends ContentProvider {
                 retrievedCursor = null;
                 break;
             case HISTORICAL_QUOTE:
-                retrievedCursor = null;
+                retrievedCursor = getHistoricalQuoteCursor(uri, projection, selection, selectionArgs, sortOrder);
                 break;
             case HISTORICAL_QUOTE_IN_RANGE:
                 retrievedCursor = getHistoricalQuoteInRangeCursor(uri, projection, selection, sortOrder);
                 break;
-
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
 
@@ -169,8 +182,10 @@ public class StockQuoteProvider extends ContentProvider {
                 return StockQuoteContract.StockQuoteEntry.CONTENT_TYPE;
             case STOCKQUOTE_WITH_SYMBOL:
                 return StockQuoteContract.StockQuoteEntry.CONTENT_ITEM_TYPE;
-            case HISTORICAL_QUOTE_IN_RANGE:
+            case HISTORICAL_QUOTE:
                 return StockQuoteContract.HistoricalQuoteEntry.CONTENT_TYPE;
+            case HISTORICAL_QUOTE_IN_RANGE:
+                return StockQuoteContract.HistoricalQuoteEntry.CONTENT_ITEM_TYPE;
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
         }
@@ -269,11 +284,14 @@ public class StockQuoteProvider extends ContentProvider {
     @Override
     public int bulkInsert(@NonNull Uri uri, @NonNull ContentValues[] values) {
 
+        Log.d(LOG_TAG, "Performing a bulk insert");
+        Log.d(LOG_TAG, "The asociated uri: " + uri.toString());
         final SQLiteDatabase db = mStockQuoteDbHelper.getWritableDatabase();
         final int match = mUriMatcher.match(uri);
 
         switch (match) {
             case STOCKQUOTE:
+                Log.d(LOG_TAG, "Beginning the database transaction");
                 db.beginTransaction();
                 int returnedCount = 0;
                 try {
@@ -285,6 +303,7 @@ public class StockQuoteProvider extends ContentProvider {
                     }
                     db.setTransactionSuccessful();
                 } finally {
+                    Log.d(LOG_TAG, "Closing the database transaction");
                     db.endTransaction();
                 }
 
@@ -293,6 +312,7 @@ public class StockQuoteProvider extends ContentProvider {
                 return returnedCount;
 
             case HISTORICAL_QUOTE:
+                Log.d(LOG_TAG, "Beginning the database transaction");
                 db.beginTransaction();
                 int returnedCountHistorical = 0;
                 try {
@@ -304,6 +324,7 @@ public class StockQuoteProvider extends ContentProvider {
                     }
                     db.setTransactionSuccessful();
                 } finally {
+                    Log.d(LOG_TAG, "Closing the database transaction");
                     db.endTransaction();
                 }
                 getContext().getContentResolver().notifyChange(uri, null);
