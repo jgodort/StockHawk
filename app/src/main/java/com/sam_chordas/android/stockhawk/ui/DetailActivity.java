@@ -61,11 +61,16 @@ public class DetailActivity extends AppCompatActivity {
 
         List<Fragment> tabsFragments = new ArrayList<>();
 
+        Bundle bundleOneWeek = new Bundle();
+        bundleOneWeek.putString(TabFragment.CRITERIA_TIME_KEY, TabFragment.ONE_WEEK_CRITERIA);
+        bundleOneWeek.putParcelable(TabFragment.SELECTED_QUOTE, quote);
+        bundleOneWeek.putParcelableArrayList(MyStocksActivity.HISTORICAL_DATA_BUNDLE_KEY,
+                arguments.getParcelableArrayList(MyStocksActivity.HISTORICAL_DATA_BUNDLE_KEY));
+        tabsFragments.add(TabFragment.instantiate(this, TabFragment.class.getName(), bundleOneWeek));
+
         Bundle bundleOneMonth = new Bundle();
         bundleOneMonth.putString(TabFragment.CRITERIA_TIME_KEY, TabFragment.ONE_MONTH_CRITERIA);
         bundleOneMonth.putParcelable(TabFragment.SELECTED_QUOTE, quote);
-        bundleOneMonth.putParcelableArrayList(MyStocksActivity.HISTORICAL_DATA_BUNDLE_KEY,
-                arguments.getParcelableArrayList(MyStocksActivity.HISTORICAL_DATA_BUNDLE_KEY));
         tabsFragments.add(TabFragment.instantiate(this, TabFragment.class.getName(), bundleOneMonth));
 
         Bundle bundleThreeMonth = new Bundle();
@@ -78,18 +83,12 @@ public class DetailActivity extends AppCompatActivity {
         bundleSixMonth.putParcelable(TabFragment.SELECTED_QUOTE, quote);
         tabsFragments.add(TabFragment.instantiate(this, TabFragment.class.getName(), bundleSixMonth));
 
-        Bundle bundleOneYear = new Bundle();
-        bundleOneYear.putString(TabFragment.CRITERIA_TIME_KEY, TabFragment.ONE_YEAR_CRITERIA);
-        bundleOneYear.putParcelable(TabFragment.SELECTED_QUOTE, quote);
-        tabsFragments.add(TabFragment.instantiate(this, TabFragment.class.getName(), bundleOneYear));
-
 
         viewPagerAdapter = new ViewPagerAdapter(getSupportFragmentManager(), tabsFragments, this);
         viewPager.setAdapter(viewPagerAdapter);
 
         viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
         tabLayout.setupWithViewPager(viewPager);
-
 
 
     }

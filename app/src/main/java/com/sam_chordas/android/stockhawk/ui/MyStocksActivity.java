@@ -206,7 +206,7 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
                 HISTORICAL_COLUMNS,
                 selection,
                 new String[]{String.valueOf(mCursorAdapter.getStockId(position))},
-                null);
+                StockQuoteContract.HistoricalQuoteEntry.COLUMN_DATE +" ASC");
 
         String selectionQuote = StockQuoteContract.StockQuoteEntry.TABLE_NAME + "." +
                 StockQuoteContract.StockQuoteEntry._ID + "=?";
@@ -218,6 +218,7 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
 
 
         if (historicData != null && historicData.moveToFirst()) {
+
             List<HistoricalQuote> historicalQuotes = new ArrayList<HistoricalQuote>();
             for (int i = 0; i < historicData.getCount(); i++) {
                 HistoricalQuote hQuote = new HistoricalQuote();
@@ -229,6 +230,7 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
                 hQuote.volume = historicData.getString(historicData.getColumnIndex(StockQuoteContract.HistoricalQuoteEntry.COLUMN_VOLUME));
 
                 historicalQuotes.add(hQuote);
+                historicData.moveToNext();
             }
             historicData.close();
 

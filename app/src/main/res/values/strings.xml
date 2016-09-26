@@ -19,7 +19,7 @@
     <string name="tab_label_one_month" translatable="true">1 Month</string>
     <string name="tab_label_three_months" translatable="true">3 Months</string>
     <string name="tab_label_six_months" translatable="true">6 Months</string>
-    <string name="tab_label_one_year" translatable="true">1 Year</string>
+    <string name="tab_label_one_week" translatable="true">1 Week</string>
 
 
     <!-- A11y -->

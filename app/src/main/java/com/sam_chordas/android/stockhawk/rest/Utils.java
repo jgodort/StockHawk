@@ -8,6 +8,7 @@ import android.database.DatabaseUtils;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.NonNull;
+import android.text.format.Time;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -33,7 +34,16 @@ public class Utils {
 
     private static final SimpleDateFormat FORMAT_DATE_YAHOO_SDF = new SimpleDateFormat("yyyy-MM-dd");
     public static final String FORMAT_DATE_YAHOO = "yyyy-MM-dd";
+
+    public static final String ONE_WEEK_CRITERIA = "OWC";
+    public static final String ONE_MONTH_CRITERIA = "OMC";
+    public static final String THREE_MONTH_CRITERIA = "TMC";
+    public static final String SIX_MONTH_CRITERIA = "SMC";
+
     public static final int LAST_WEEK_VALUE = 7;
+    public static final int LAST_MONTH_VALUE = 30;
+    public static final int LAST_THREE_MONTH_VALUE = 90;
+    public static final int LAST_SIX_MONTH_VALUE = 90;
 
     private static final String HISTORICAL_BASE_QUERY = "select * from yahoo.finance.historicaldata";
     private static final String HISTORICAL_QUERY_CONDITION = " where symbol = ";
@@ -171,16 +181,22 @@ public class Utils {
         return builder.build();
     }
 
-    public static final int normalizeDateToPersist(String date) {
-        int normalizedDate = 0;
-        try {
-            normalizedDate = (int) new SimpleDateFormat("yyyy-MM-dd").parse(date).getTime();
-        } catch (ParseException e) {
-            Log.e(LOG_TAG, "Error while normalize date");
-        }
 
-        return normalizedDate;
+    public static long normalizeDateToPersist(String date) {
+        // normalize the start date to the beginning of the (UTC) day
+        try {
+            Time time = new Time();
+            Date convertedStringDate = new SimpleDateFormat("yyyy-MM-dd").parse(date);
+            time.set(convertedStringDate.getTime());
+            int julianDay = Time.getJulianDay(convertedStringDate.getTime(), time.gmtoff);
+            long returnedDate = time.setJulianDay(julianDay);
+            return returnedDate;
+        } catch (ParseException e) {
+            Log.e(LOG_TAG, "normalizeDateToPersist: ", e);
+        }
+        return 0;
     }
+
 
     /**
      * Method that allow to show a Toast Message on the Main thread.
@@ -206,27 +222,41 @@ public class Utils {
      * @param quoteSymbol Quote symbol who represent the acronim of the company.
      * @return YQL Query to make a call to the Financial API.
      */
-    public static String generateHistoricalYQLQuery(String quoteSymbol) {
+    public static String generateHistoricalYQLQuery(String quoteSymbol, String criteriaTime) {
 
+        int queryValue;
 
-        new SimpleDateFormat("yyyy-MM-dd");
+        switch (criteriaTime) {
+            case ONE_WEEK_CRITERIA:
+                queryValue=LAST_WEEK_VALUE;
+                break;
+            case ONE_MONTH_CRITERIA:
+                queryValue = LAST_MONTH_VALUE;
+                break;
+            case THREE_MONTH_CRITERIA:
+                queryValue = LAST_THREE_MONTH_VALUE;
+                break;
+            case SIX_MONTH_CRITERIA:
+                queryValue = LAST_SIX_MONTH_VALUE;
+                break;
+            default:
+                throw  new UnsupportedOperationException("Unknow Critera Value.");
 
-        StringBuffer buffer = new StringBuffer(HISTORICAL_BASE_QUERY).
-                append(HISTORICAL_QUERY_CONDITION).
-                append("\"").
-                append(quoteSymbol).
-                append("\"").
-                append(HISTORICAL_QUERY_START_DATE).
-                append("\"").
-                append(convertDateToString(decreaseDaysToDate(new Date(), LAST_WEEK_VALUE), Utils.FORMAT_DATE_YAHOO)).//Start Date Value
-                append("\"").
-                append(HISTORICAL_QUERY_END_DATE).
-                append("\"").
-                append(convertDateToString(new Date(), Utils.FORMAT_DATE_YAHOO)).//End Date Value.
-                append("\"");
+        }
 
-
-        return buffer.toString();
+        return HISTORICAL_BASE_QUERY +
+                HISTORICAL_QUERY_CONDITION +
+                "\"" +
+                quoteSymbol +
+                "\"" +
+                HISTORICAL_QUERY_START_DATE +
+                "\"" +
+                convertDateToString(decreaseDaysToDate(new Date(), queryValue), Utils.FORMAT_DATE_YAHOO) +//Start Date Value
+                "\"" +
+                HISTORICAL_QUERY_END_DATE +
+                "\"" +
+                convertDateToString(new Date(), Utils.FORMAT_DATE_YAHOO) +//End Date Value.
+                "\"";
     }
 
     /**

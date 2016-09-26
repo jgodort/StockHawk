@@ -15,7 +15,7 @@
     <string name="tab_label_one_month" translatable="true">1 Mes</string>
     <string name="tab_label_three_months" translatable="true">3 Meses</string>
     <string name="tab_label_six_months" translatable="true">6 Meses</string>
-    <string name="tab_label_one_year" translatable="true">1 Año</string>
+    <string name="tab_label_one_week" translatable="true">1 Semana</string>
 
     <!-- A11y -->
     <string name="a11y_daily_low">Valor Mínimo Diario: <xliff:g id="dlv">%1$s</xliff:g></string>

@@ -44,6 +44,8 @@ public class StockTaskService extends GcmTaskService {
 
     public static final String ADD_PARAM = "add";
 
+    public static final String ONE_WEEK_CRITERIA = "OWC";
+
 
     /**
      * Client to retrive data from Yahoo Finance API.
@@ -144,7 +146,7 @@ public class StockTaskService extends GcmTaskService {
                 storeOnDatabase(fetchedQuotes);
 
                 for (Quote itQuote : fetchedQuotes) {
-                    List<HistoricalQuote> historicalQuotes = fetchHistoricalData(Utils.generateHistoricalYQLQuery(itQuote.symbol));
+                    List<HistoricalQuote> historicalQuotes = fetchHistoricalData(Utils.generateHistoricalYQLQuery(itQuote.symbol, ONE_WEEK_CRITERIA));
                     storeOnDatabase(historicalQuotes, itQuote.id);
                 }
             }

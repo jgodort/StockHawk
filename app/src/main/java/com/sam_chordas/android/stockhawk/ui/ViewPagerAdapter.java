@@ -17,10 +17,10 @@ import java.util.List;
 public class ViewPagerAdapter extends FragmentStatePagerAdapter {
 
 
-    public static final int ONE_MONTH_KEY = 0;
-    public static final int THREE_MONTH_KEY = 1;
-    public static final int SIX_MONTH_KEY = 2;
-    public static final int ONE_YEAR_KEY = 3;
+    public static final int ONE_WEEK_KEY = 0;
+    public static final int ONE_MONTH_KEY = 1;
+    public static final int THREE_MONTH_KEY = 2;
+    public static final int SIX_MONTH_KEY = 3;
 
 
     private List<Fragment> mFragments;
@@ -51,6 +51,10 @@ public class ViewPagerAdapter extends FragmentStatePagerAdapter {
     public CharSequence getPageTitle(int position) {
         CharSequence code;
         switch (position) {
+
+            case ONE_WEEK_KEY:
+                code = mContext.getString(R.string.tab_label_one_week);
+                break;
             case ONE_MONTH_KEY:
                 code = mContext.getString(R.string.tab_label_one_month);
                 break;
@@ -60,9 +64,7 @@ public class ViewPagerAdapter extends FragmentStatePagerAdapter {
             case SIX_MONTH_KEY:
                 code = mContext.getString(R.string.tab_label_six_months);
                 break;
-            case ONE_YEAR_KEY:
-                code = mContext.getString(R.string.tab_label_one_year);
-                break;
+
             default:
                 throw new IllegalArgumentException("Requesting a non existing fragment");
         }
