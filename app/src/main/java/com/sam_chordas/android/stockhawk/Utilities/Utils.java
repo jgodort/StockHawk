@@ -1,4 +1,4 @@
-package com.sam_chordas.android.stockhawk.rest;
+package com.sam_chordas.android.stockhawk.Utilities;
 
 import android.content.ContentProviderOperation;
 import android.content.ContentResolver;
@@ -17,13 +17,18 @@ import com.sam_chordas.android.stockhawk.data.StockQuoteContract;
 import com.sam_chordas.android.stockhawk.rest.model.HistoricalQuote;
 import com.sam_chordas.android.stockhawk.rest.model.Quote;
 import com.sam_chordas.android.stockhawk.service.StockTaskService;
-import com.sam_chordas.android.stockhawk.ui.MyStocksActivity;
 
 import java.text.Format;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.GregorianCalendar;
+
+import static com.sam_chordas.android.stockhawk.Utilities.Constants.FIX_ADD_CALL_STOCK_QUOTE;
+import static com.sam_chordas.android.stockhawk.Utilities.Constants.ONE_MONTH_CRITERIA;
+import static com.sam_chordas.android.stockhawk.Utilities.Constants.ONE_WEEK_CRITERIA;
+import static com.sam_chordas.android.stockhawk.Utilities.Constants.SIX_MONTH_CRITERIA;
+import static com.sam_chordas.android.stockhawk.Utilities.Constants.THREE_MONTH_CRITERIA;
 
 /**
  * Created by sam_chordas on 10/8/15.
@@ -35,25 +40,22 @@ public class Utils {
     private static final SimpleDateFormat FORMAT_DATE_YAHOO_SDF = new SimpleDateFormat("yyyy-MM-dd");
     public static final String FORMAT_DATE_YAHOO = "yyyy-MM-dd";
 
-    public static final String ONE_WEEK_CRITERIA = "OWC";
-    public static final String ONE_MONTH_CRITERIA = "OMC";
-    public static final String THREE_MONTH_CRITERIA = "TMC";
-    public static final String SIX_MONTH_CRITERIA = "SMC";
-
-    public static final int LAST_WEEK_VALUE = 7;
-    public static final int LAST_MONTH_VALUE = 30;
-    public static final int LAST_THREE_MONTH_VALUE = 90;
-    public static final int LAST_SIX_MONTH_VALUE = 90;
+    private static final int LAST_WEEK_VALUE = 7;
+    private static final int LAST_MONTH_VALUE = 30;
+    private static final int LAST_THREE_MONTH_VALUE = 90;
+    private static final int LAST_SIX_MONTH_VALUE = 180;
 
     private static final String HISTORICAL_BASE_QUERY = "select * from yahoo.finance.historicaldata";
     private static final String HISTORICAL_QUERY_CONDITION = " where symbol = ";
     private static final String HISTORICAL_QUERY_START_DATE = " and startDate = ";
     private static final String HISTORICAL_QUERY_END_DATE = " and endDate = ";
 
-    public static final String BASE_QUERY = "select * from yahoo.finance.quotes" +
+    private static final String BASE_QUERY = "select * from yahoo.finance.quotes" +
             " where symbol in (";
 
     private static final String SAMPLE_STOCK_QUOTES = "\"YHOO\",\"AAPL\",\"GOOG\",\"MSFT\"";
+
+
 
     public static boolean showPercent = true;
 
@@ -189,8 +191,7 @@ public class Utils {
             Date convertedStringDate = new SimpleDateFormat("yyyy-MM-dd").parse(date);
             time.set(convertedStringDate.getTime());
             int julianDay = Time.getJulianDay(convertedStringDate.getTime(), time.gmtoff);
-            long returnedDate = time.setJulianDay(julianDay);
-            return returnedDate;
+            return time.setJulianDay(julianDay);
         } catch (ParseException e) {
             Log.e(LOG_TAG, "normalizeDateToPersist: ", e);
         }
@@ -228,7 +229,7 @@ public class Utils {
 
         switch (criteriaTime) {
             case ONE_WEEK_CRITERIA:
-                queryValue=LAST_WEEK_VALUE;
+                queryValue = LAST_WEEK_VALUE;
                 break;
             case ONE_MONTH_CRITERIA:
                 queryValue = LAST_MONTH_VALUE;
@@ -240,7 +241,7 @@ public class Utils {
                 queryValue = LAST_SIX_MONTH_VALUE;
                 break;
             default:
-                throw  new UnsupportedOperationException("Unknow Critera Value.");
+                throw new UnsupportedOperationException("Unknow Critera Value.");
 
         }
 
@@ -270,7 +271,7 @@ public class Utils {
      */
     public static String generateQuoteQuery(Context context, TaskParams params) {
         ContentResolver contentResolver = context.getContentResolver();
-        StringBuffer query = new StringBuffer(BASE_QUERY);
+        StringBuilder query = new StringBuilder(BASE_QUERY);
 
         Cursor dataBaseCursor = contentResolver.query(
                 StockQuoteContract.StockQuoteEntry.CONTENT_URI,
@@ -298,11 +299,9 @@ public class Utils {
             // retrieve only one quote (to retrive one quote you need to
             // call another endpoint) we fetch from the database the stored
             // quotes and update all.
-            StringBuilder mStoredSymbols = obtainQuoteSymbolsFromCursor(dataBaseCursor);
-            //mStoredSymbols.replace(mStoredSymbols.length() - 1, mStoredSymbols.length(), " ");
-            query.append(mStoredSymbols.toString());
+            query.append(FIX_ADD_CALL_STOCK_QUOTE).append(",");
             Log.d(LOG_TAG, "generateQuoteQuery: Generating query to add quote:");
-            query.append("\"").append(params.getExtras().getString(MyStocksActivity.SYMBOL_KEY)).append("\"").append(")");
+            query.append("\"").append(params.getExtras().getString(Constants.SYMBOL_KEY)).append("\"").append(")");
             Log.d(LOG_TAG, "generateQuoteQuery: " + query.toString());
         }
 

@@ -26,17 +26,28 @@ public class StockQuoteDbHelper extends SQLiteOpenHelper {
 
     private static final int DATABASE_VERSION = 4;
 
-    static final String DATABASE_NAME = "stockquote.db";
+    private static final String DATABASE_NAME = "stockquote.db";
 
 
+    /**
+     * Default constructor.
+     *
+     * @param context a context instance.
+     */
     public StockQuoteDbHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
 
+    /**
+     * @param sqLiteDatabase
+     */
     @Override
     public void onCreate(SQLiteDatabase sqLiteDatabase) {
 
 
+        /**
+         * Sentence to create the StockQuote table.
+         */
         final String SQL_CREATE_STOCKQUOTE_TABLE = CREATE_TABLE + StockQuoteContract.StockQuoteEntry.TABLE_NAME +
                 LEFT_PARENTHESIS +
                 StockQuoteContract.StockQuoteEntry._ID + INTEGER + PRIMARY + KEY + AUTOINCREMENT + COMMA +
@@ -74,6 +85,9 @@ public class StockQuoteDbHelper extends SQLiteOpenHelper {
                 RIGHT_PARENTHESIS + ";";
 
 
+        /**
+         * Sentence to create HistoricalQuote table.
+         */
         final String SQL_CREATE_HISTORICALQUOTE_TABLE = CREATE_TABLE + StockQuoteContract.HistoricalQuoteEntry.TABLE_NAME +
                 LEFT_PARENTHESIS +
                 StockQuoteContract.HistoricalQuoteEntry._ID + INTEGER + PRIMARY + KEY + AUTOINCREMENT + COMMA +
@@ -93,13 +107,19 @@ public class StockQuoteDbHelper extends SQLiteOpenHelper {
                 StockQuoteContract.StockQuoteEntry.TABLE_NAME + " (" + StockQuoteContract.StockQuoteEntry._ID + ")" +
                 RIGHT_PARENTHESIS + ";";
 
-
         sqLiteDatabase.execSQL(SQL_CREATE_STOCKQUOTE_TABLE);
         sqLiteDatabase.execSQL(SQL_CREATE_HISTORICALQUOTE_TABLE);
     }
 
+    /**
+     * Update the Database model.
+     *
+     * @param sqLiteDatabase
+     * @param oldVersion
+     * @param newVersion
+     */
     @Override
-    public void onUpgrade(SQLiteDatabase sqLiteDatabase, int i, int i1) {
+    public void onUpgrade(SQLiteDatabase sqLiteDatabase, int oldVersion, int newVersion) {
         sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " + StockQuoteContract.HistoricalQuoteEntry.TABLE_NAME);
         sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " + StockQuoteContract.StockQuoteEntry.TABLE_NAME);
         onCreate(sqLiteDatabase);

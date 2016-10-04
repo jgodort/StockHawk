@@ -4,6 +4,9 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import com.google.gson.annotations.SerializedName;
+import com.sam_chordas.android.stockhawk.Utilities.Utils;
+
+import java.util.Comparator;
 
 /**
  * Created by Javier Godino on 05/09/2016.
@@ -33,21 +36,21 @@ public class HistoricalQuote implements Parcelable {
     @SerializedName("Adj_Close")
     public String adjClose;
 
-    public HistoricalQuote(){
+    public HistoricalQuote() {
 
     }
 
     public HistoricalQuote(Parcel source) {
         super();
-        id=source.readInt();
-        symbol=source.readString();
-        date=source.readString();
-        open=source.readString();
-        high=source.readString();
-        low=source.readString();
-        close=source.readString();
-        volume=source.readString();
-        adjClose=source.readString();
+        id = source.readInt();
+        symbol = source.readString();
+        date = source.readString();
+        open = source.readString();
+        high = source.readString();
+        low = source.readString();
+        close = source.readString();
+        volume = source.readString();
+        adjClose = source.readString();
     }
 
 
@@ -112,12 +115,26 @@ public class HistoricalQuote implements Parcelable {
     };
 
 
-
-
     @Override
     public int describeContents() {
         return 0;
     }
 
+
+    public static  Comparator<HistoricalQuote> COMPARATOR_DATE = new Comparator<HistoricalQuote>() {
+        public int compare(HistoricalQuote left, HistoricalQuote right) {
+            Long f1 = Utils.normalizeDateToPersist(left.getDate());
+            Long f2 = Utils.normalizeDateToPersist(right.getDate());
+            if (f1 == 0 && f2 == 0) {
+                return 0;
+            } else if (f1 == 0) {
+                return 1;
+            } else if (f2 == 0) {
+                return -1;
+            }
+            return f2.compareTo(f1);
+
+        }
+    };
 
 }

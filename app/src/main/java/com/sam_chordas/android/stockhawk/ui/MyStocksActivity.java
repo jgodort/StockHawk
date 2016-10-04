@@ -16,6 +16,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
 import android.text.InputType;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -29,11 +30,12 @@ import com.google.android.gms.gcm.PeriodicTask;
 import com.google.android.gms.gcm.Task;
 import com.melnykov.fab.FloatingActionButton;
 import com.sam_chordas.android.stockhawk.R;
+import com.sam_chordas.android.stockhawk.Utilities.Constants;
+import com.sam_chordas.android.stockhawk.Utilities.Utils;
 import com.sam_chordas.android.stockhawk.data.StockQuoteContract;
 import com.sam_chordas.android.stockhawk.data.StockQuoteProvider;
 import com.sam_chordas.android.stockhawk.rest.QuoteCursorAdapter;
 import com.sam_chordas.android.stockhawk.rest.RecyclerViewItemClickListener;
-import com.sam_chordas.android.stockhawk.rest.Utils;
 import com.sam_chordas.android.stockhawk.rest.model.HistoricalQuote;
 import com.sam_chordas.android.stockhawk.rest.model.Quote;
 import com.sam_chordas.android.stockhawk.service.StockIntentService;
@@ -46,14 +48,16 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
+import static com.sam_chordas.android.stockhawk.Utilities.Constants.HISTORICAL_DATA_BUNDLE_KEY;
+import static com.sam_chordas.android.stockhawk.Utilities.Constants.SELECTED_STOCKQUOTE_KEY;
+
 public class MyStocksActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
-    public static final String SELECTED_STOCKQUOTE = "S_STQ";
-    public static final String HISTORICAL_DATA_BUNDLE_KEY = "S_HD";
 
-    public static final String TAG_KEY = "tag";
-    public static final String SYMBOL_KEY = "symbol";
+    private static final String LOG_TAG = MyStocksActivity.class.getName();
 
-
+    /**
+     * The projection to retrieve the historical information from  quotes.
+     */
     private static final String[] HISTORICAL_COLUMNS = {
             StockQuoteContract.HistoricalQuoteEntry.TABLE_NAME + "." + StockQuoteContract.HistoricalQuoteEntry._ID,
             StockQuoteContract.HistoricalQuoteEntry.TABLE_NAME + "." + StockQuoteContract.HistoricalQuoteEntry.COLUMN_SYMBOL,
@@ -66,7 +70,9 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
 
     };
 
-
+    /**
+     * The projection to retrieve the information from a quote.
+     */
     private static final String[] QUOTE_COLUMNS = {
             StockQuoteContract.StockQuoteEntry.TABLE_NAME + "." + StockQuoteContract.StockQuoteEntry._ID,
             StockQuoteContract.StockQuoteEntry.TABLE_NAME + "." + StockQuoteContract.StockQuoteEntry.COLUMN_SYMBOL,
@@ -108,6 +114,7 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Log.d(LOG_TAG, "onCreate: start");
         super.onCreate(savedInstanceState);
         mContext = this;
         checkInternetConnectionAvailable();
@@ -119,7 +126,7 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
         mServiceIntent = new Intent(this, StockIntentService.class);
         if (savedInstanceState == null) {
             // Run the initialize task service so that some stocks appear upon an empty database
-            mServiceIntent.putExtra(TAG_KEY, StockTaskService.INIT_PARAM);
+            mServiceIntent.putExtra(Constants.TAG_KEY, StockTaskService.INIT_PARAM);
             if (checkInternetConnectionAvailable()) {
                 startService(mServiceIntent);
             } else {
@@ -158,7 +165,7 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
                                     // On FAB click, receive user input. Make sure the stock doesn't already exist
                                     // in the DB and proceed accordingly
                                     Cursor c = getContentResolver().query(
-                                            StockQuoteContract.StockQuoteEntry.buildStockQuoteSymbolUri(input.toString()),
+                                            StockQuoteContract.StockQuoteEntry.buildStockQuoteSymbolUri(input.toString().toUpperCase()),
                                             new String[]{"DISTINCT " + StockQuoteContract.StockQuoteEntry.TABLE_NAME + "." + StockQuoteContract.StockQuoteEntry.COLUMN_SYMBOL},
                                             StockQuoteProvider.sStockQuoteSelection,
                                             null,
@@ -172,8 +179,8 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
                                         return;
                                     } else {
                                         // Add the stock to DB
-                                        mServiceIntent.putExtra(TAG_KEY, StockTaskService.ADD_PARAM);
-                                        mServiceIntent.putExtra(SYMBOL_KEY, input.toString());
+                                        mServiceIntent.putExtra(Constants.TAG_KEY, StockTaskService.ADD_PARAM);
+                                        mServiceIntent.putExtra(Constants.SYMBOL_KEY, input.toString());
                                         startService(mServiceIntent);
                                     }
                                 }
@@ -194,9 +201,12 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
         if (checkInternetConnectionAvailable()) {
             configurePeriodicTask();
         }
+
+        Log.d(LOG_TAG, "onCreate: end");
     }
 
     private void prepareDetailIntentData(int position) {
+        Log.d(LOG_TAG, "prepareDetailIntentData: start ");
         Bundle arguments = new Bundle();
 
         String selection = StockQuoteContract.HistoricalQuoteEntry.TABLE_NAME + "." +
@@ -206,7 +216,7 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
                 HISTORICAL_COLUMNS,
                 selection,
                 new String[]{String.valueOf(mCursorAdapter.getStockId(position))},
-                StockQuoteContract.HistoricalQuoteEntry.COLUMN_DATE +" ASC");
+                StockQuoteContract.HistoricalQuoteEntry.COLUMN_DATE + " ASC");
 
         String selectionQuote = StockQuoteContract.StockQuoteEntry.TABLE_NAME + "." +
                 StockQuoteContract.StockQuoteEntry._ID + "=?";
@@ -255,22 +265,25 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
             quote.yearHigh = quoteCursor.getString(quoteCursor.getColumnIndex(StockQuoteContract.StockQuoteEntry.COLUMN_YEAR_HIGH));
             quote.yearLow = quoteCursor.getString(quoteCursor.getColumnIndex(StockQuoteContract.StockQuoteEntry.COLUMN_YEAR_LOW));
 
-            arguments.putParcelable(SELECTED_STOCKQUOTE, quote);
+            arguments.putParcelable(SELECTED_STOCKQUOTE_KEY, quote);
 
             quoteCursor.close();
         }
 
 
         Intent intent = new Intent(mContext, DetailActivity.class);
-        intent.putExtra(SELECTED_STOCKQUOTE, arguments);
+        intent.putExtra(SELECTED_STOCKQUOTE_KEY, arguments);
 
         mContext.startActivity(intent);
+
+        Log.d(LOG_TAG, "prepareDetailIntentData: end ");
     }
 
     /**
      * Method that configure the synchronization of the information about the Stock.
      */
     private void configurePeriodicTask() {
+        Log.d(LOG_TAG, "configurePeriodicTask: start");
         long period = 3600L;
         long flex = 10L;
         String periodicTag = "periodic";
@@ -288,16 +301,19 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
         // Schedule task with tag "periodic." This ensure that only the stocks present in the DB
         // are updated.
         GcmNetworkManager.getInstance(this).schedule(periodicTask);
+        Log.d(LOG_TAG, "configurePeriodicTask: end");
     }
 
     /**
      * Method that checks the availability of the connection.
      */
     private boolean checkInternetConnectionAvailable() {
+        Log.d(LOG_TAG, "checkInternetConnectionAvailable: start");
         ConnectivityManager cm =
                 (ConnectivityManager) mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
 
         NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        Log.d(LOG_TAG, "checkInternetConnectionAvailable: end");
         return activeNetwork != null &&
                 activeNetwork.isConnectedOrConnecting();
     }
@@ -305,33 +321,42 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
 
     @Override
     public void onResume() {
+        Log.d(LOG_TAG, "onResume: start");
         super.onResume();
         getLoaderManager().restartLoader(CURSOR_LOADER_ID, null, this);
+        Log.d(LOG_TAG, "onResume: end");
     }
 
     /**
      * Method that show a Toast message if the network is not available.
      */
     public void networkToast() {
+        Log.d(LOG_TAG, "networkToast: start");
         Toast.makeText(mContext, getString(R.string.network_toast), Toast.LENGTH_SHORT).show();
+        Log.d(LOG_TAG, "networkToast: end");
     }
 
     public void restoreActionBar() {
+        Log.d(LOG_TAG, "restoreActionBar: start");
         ActionBar actionBar = getSupportActionBar();
         actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
         actionBar.setDisplayShowTitleEnabled(true);
         actionBar.setTitle(mTitle);
+        Log.d(LOG_TAG, "restoreActionBar: end");
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
+        Log.d(LOG_TAG, "onCreateOptionsMenu: start");
         getMenuInflater().inflate(R.menu.my_stocks, menu);
         restoreActionBar();
+        Log.d(LOG_TAG, "onCreateOptionsMenu: end");
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        Log.d(LOG_TAG, "onOptionsItemSelected: start");
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
@@ -348,11 +373,13 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
             this.getContentResolver().notifyChange(StockQuoteContract.StockQuoteEntry.CONTENT_URI, null);
         }
 
+        Log.d(LOG_TAG, "onOptionsItemSelected: end");
         return super.onOptionsItemSelected(item);
     }
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        Log.d(LOG_TAG, "onCreateLoader: start");
         // This narrows the return to only the stocks that are most current.
 
         String[] projection = new String[]{
@@ -364,6 +391,7 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
                 StockQuoteContract.StockQuoteEntry.TABLE_NAME + "." + StockQuoteContract.StockQuoteEntry.COLUMN_CHANGE,
                 StockQuoteContract.StockQuoteEntry.TABLE_NAME + "." + StockQuoteContract.StockQuoteEntry.COLUMN_ISUP};
 
+        Log.d(LOG_TAG, "onCreateLoader: end");
         return new CursorLoader(this, StockQuoteContract.StockQuoteEntry.CONTENT_URI,
                 projection,
                 StockQuoteContract.StockQuoteEntry.TABLE_NAME + "." + StockQuoteContract.StockQuoteEntry.COLUMN_ISCURRENT + " = ?",
@@ -373,6 +401,7 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        Log.d(LOG_TAG, "onLoadFinished: start");
         mCursorAdapter.swapCursor(data);
         mCursor = data;
 
@@ -397,12 +426,15 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
             mEmptyViewStock.setVisibility(View.VISIBLE);
         }
 
-
+        Log.d(LOG_TAG, "onLoadFinished: end");
     }
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
+
+        Log.d(LOG_TAG, "onLoaderReset: start");
         mCursorAdapter.swapCursor(null);
+        Log.d(LOG_TAG, "onLoaderReset: end");
     }
 
 }

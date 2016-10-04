@@ -35,7 +35,7 @@ public class StockQuoteProvider extends ContentProvider {
 
     static {
         mQueryBuilder = new SQLiteQueryBuilder();
-        mQueryBuilder.setTables(StockQuoteContract.StockQuoteEntry.TABLE_NAME + " INNER JOIN " +
+        mQueryBuilder.setTables(StockQuoteContract.StockQuoteEntry.TABLE_NAME + " LEFT JOIN " +
                 StockQuoteContract.HistoricalQuoteEntry.TABLE_NAME +
                 " ON " + StockQuoteContract.StockQuoteEntry.TABLE_NAME +
                 "." + StockQuoteContract.StockQuoteEntry._ID +

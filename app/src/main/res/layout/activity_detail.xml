@@ -7,6 +7,7 @@
     android:fitsSystemWindows="true"
     tools:context=".ui.DetailActivity">
 
+
     <android.support.design.widget.AppBarLayout
         android:id="@+id/app_bar"
         android:layout_width="match_parent"
@@ -52,10 +53,10 @@
                         android:layout_height="wrap_content"
                         android:layout_gravity="start"
                         android:gravity="end"
-                        android:paddingEnd="10sp"
-                        android:paddingLeft="10sp"
-                        android:paddingRight="10sp"
-                        android:paddingStart="10sp"
+                        android:paddingEnd="@dimen/activity_horizontal_margin"
+                        android:paddingLeft="@dimen/activity_horizontal_margin"
+                        android:paddingRight="@dimen/activity_horizontal_margin"
+                        android:paddingStart="@dimen/activity_horizontal_margin"
                         tools:text="1000.00" />
 
                     <TextView
@@ -82,10 +83,21 @@
 
     </android.support.design.widget.AppBarLayout>
 
+
     <android.support.v4.view.ViewPager
         android:id="@+id/viewPager"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         app:layout_behavior="android.support.design.widget.AppBarLayout$ScrollingViewBehavior" />
+
+    <include
+        android:id="@+id/dailyYearlyInfo"
+        layout="@layout/high_low_daily_yearly_detail"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_gravity="bottom"
+        android:gravity="bottom" />
 
 </android.support.design.widget.CoordinatorLayout>

@@ -33,6 +33,24 @@
             android:name=".ui.DetailActivity"
             android:label="Details" />
 
+
+        <receiver
+            android:name=".widget.StockWidgetProvider"
+            android:label="StockHawk Widget">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.sam_chordas.android.stockhawk.ACTION_DATA_UPDATED" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_info_today" />
+        </receiver>
+
+        <service
+            android:name=".widget.StockListWidgetIntentService"
+            android:exported="true"
+            android:permission="android.permission.BIND_REMOTEVIEWS" />
+
         <service
             android:name="com.sam_chordas.android.stockhawk.service.StockTaskService"
             android:exported="true"
@@ -46,7 +64,7 @@
         <provider
             android:name=".data.StockQuoteProvider"
             android:authorities="@string/content_authority"
-            android:exported="false" />
+            android:exported="true" />
     </application>
 
 </manifest>

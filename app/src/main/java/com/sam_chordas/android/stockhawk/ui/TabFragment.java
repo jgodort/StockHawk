@@ -11,8 +11,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
-import android.widget.TextView;
 
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.charts.LineChart;
@@ -27,8 +25,9 @@ import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.interfaces.datasets.IBarDataSet;
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
 import com.sam_chordas.android.stockhawk.R;
+import com.sam_chordas.android.stockhawk.Utilities.Constants;
+import com.sam_chordas.android.stockhawk.Utilities.Utils;
 import com.sam_chordas.android.stockhawk.rest.ServiceGenerator;
-import com.sam_chordas.android.stockhawk.rest.Utils;
 import com.sam_chordas.android.stockhawk.rest.client.YahooFinanceAPIClient;
 import com.sam_chordas.android.stockhawk.rest.model.HistoricalQuote;
 import com.sam_chordas.android.stockhawk.rest.model.HistoricalStockQuoteModel;
@@ -39,6 +38,7 @@ import com.sam_chordas.android.stockhawk.touch_helper.CustomOnChartGestureListen
 import com.sam_chordas.android.stockhawk.touch_helper.CustomOnChartValueSelectedListener;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -49,6 +49,13 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import retrofit2.Call;
 
+import static com.sam_chordas.android.stockhawk.Utilities.Constants.CRITERIA_TIME_KEY;
+import static com.sam_chordas.android.stockhawk.Utilities.Constants.ONE_MONTH_CRITERIA;
+import static com.sam_chordas.android.stockhawk.Utilities.Constants.ONE_WEEK_CRITERIA;
+import static com.sam_chordas.android.stockhawk.Utilities.Constants.SELECTED_QUOTE;
+import static com.sam_chordas.android.stockhawk.Utilities.Constants.SIX_MONTH_CRITERIA;
+import static com.sam_chordas.android.stockhawk.Utilities.Constants.THREE_MONTH_CRITERIA;
+
 /**
  * Created by Javier Godino on 11/09/2016.
  * Email: jgodort.software@gmail.com
@@ -58,28 +65,6 @@ public class TabFragment extends Fragment {
 
     private static final String LOG_TAG = TabFragment.class.getName();
 
-    public static final String CRITERIA_TIME_KEY = "CTK";
-
-    public static final String SELECTED_QUOTE = "SQ_ID";
-
-    public static final String ONE_WEEK_CRITERIA = "OWC";
-    public static final String ONE_MONTH_CRITERIA = "OMC";
-    public static final String THREE_MONTH_CRITERIA = "TMC";
-    public static final String SIX_MONTH_CRITERIA = "SMC";
-
-
-    @BindView(R.id.dailyHigh)
-    TextView dailyHigh;
-
-    @BindView(R.id.dailyLow)
-    TextView dailyLow;
-
-    @BindView(R.id.yearlyLow)
-    TextView yearlyLow;
-
-    @BindView(R.id.yearlyHigh)
-    TextView yearlyHigh;
-
 
     @BindView(R.id.stockQuoteChart)
     LineChart chartStock;
@@ -87,11 +72,7 @@ public class TabFragment extends Fragment {
     @BindView(R.id.volumeBarChart)
     BarChart volumeChart;
 
-    @BindView(R.id.stock_rise_icon)
-    ImageView stockRiseIcon;
 
-    @BindView(R.id.stock_fall_icon)
-    ImageView stockFallIcon;
 
 
     List<HistoricalQuote> historicalQuotes;
@@ -125,22 +106,11 @@ public class TabFragment extends Fragment {
             criteriaTime = arguments.getString(CRITERIA_TIME_KEY);
             quote = arguments.getParcelable(SELECTED_QUOTE);
 
-            dailyHigh.setText(quote.getDaysHigh());
-            dailyHigh.setContentDescription(getString(R.string.a11y_daily_high, quote.getDaysHigh()));
-            dailyLow.setText(quote.getDaysLow());
-            dailyLow.setContentDescription(getString(R.string.a11y_daily_low, quote.getDaysLow()));
 
-            yearlyHigh.setText(quote.getYearHigh());
-            yearlyHigh.setContentDescription(getString(R.string.a11y_yearly_high, quote.getYearHigh()));
-            yearlyLow.setText(quote.getYearLow());
-            yearlyLow.setContentDescription(getString(R.string.a11y_daily_low, quote.getYearLow()));
-
-            stockFallIcon.setContentDescription(getString(R.string.a11y_decrease_icon));
-            stockRiseIcon.setContentDescription(getString(R.string.a11y_increse_icon));
 
             if (ONE_WEEK_CRITERIA.equals(criteriaTime) &&
-                    arguments.containsKey(MyStocksActivity.HISTORICAL_DATA_BUNDLE_KEY)) {
-                historicalQuotes = arguments.getParcelableArrayList(MyStocksActivity.HISTORICAL_DATA_BUNDLE_KEY);
+                    arguments.containsKey(Constants.HISTORICAL_DATA_BUNDLE_KEY)) {
+                historicalQuotes = arguments.getParcelableArrayList(Constants.HISTORICAL_DATA_BUNDLE_KEY);
             }
 
 
@@ -148,8 +118,10 @@ public class TabFragment extends Fragment {
                 @Override
                 public void onSuccess(Object response) {
                     historicalQuotes = ((HistoricalStockQuoteModel) response).getQuery().getResults().getQuote();
-                    fillLinechart(historicalQuotes);
-                    fillBarchart(historicalQuotes);
+                    Collections.sort(historicalQuotes, HistoricalQuote.COMPARATOR_DATE);
+                    Collections.reverse(historicalQuotes);
+                    configureDataLinearMaxMinChart(historicalQuotes);
+                    configureDataVolumeChart(historicalQuotes);
                     mprogressDialog.dismiss();
                 }
 
@@ -171,16 +143,16 @@ public class TabFragment extends Fragment {
 
         mprogressDialog.show();
         switch (criteriaTime) {
-            case TabFragment.ONE_WEEK_CRITERIA:
+            case Constants.ONE_WEEK_CRITERIA:
                 prepareDataOneWeek(historicalQuotes);
                 break;
-            case TabFragment.ONE_MONTH_CRITERIA:
+            case Constants.ONE_MONTH_CRITERIA:
                 prepareDataCallingAPI(ONE_MONTH_CRITERIA, listener);
                 break;
-            case TabFragment.THREE_MONTH_CRITERIA:
+            case Constants.THREE_MONTH_CRITERIA:
                 prepareDataCallingAPI(THREE_MONTH_CRITERIA, listener);
                 break;
-            case TabFragment.SIX_MONTH_CRITERIA:
+            case Constants.SIX_MONTH_CRITERIA:
                 prepareDataCallingAPI(SIX_MONTH_CRITERIA, listener);
                 break;
             default:
@@ -191,8 +163,8 @@ public class TabFragment extends Fragment {
     }
 
     private void prepareDataOneWeek(List<HistoricalQuote> historicalQuotes) {
-        fillLinechart(historicalQuotes);
-        fillBarchart(historicalQuotes);
+        configureDataLinearMaxMinChart(historicalQuotes);
+        configureDataVolumeChart(historicalQuotes);
     }
 
     private void prepareDataCallingAPI(String criteriaTime, RequestListener<HistoricalStockQuoteModel> listener) {
@@ -205,14 +177,14 @@ public class TabFragment extends Fragment {
 
             call.enqueue(requestCallback);
         } else {
-            fillLinechart(historicalQuotes);
-            fillBarchart(historicalQuotes);
+            configureDataLinearMaxMinChart(historicalQuotes);
+            configureDataVolumeChart(historicalQuotes);
         }
 
     }
 
 
-    private void fillBarchart(List<HistoricalQuote> processedData) {
+    private void configureDataVolumeChart(List<HistoricalQuote> processedData) {
         ArrayList<BarEntry> entries = new ArrayList<>();
         List<String> labels = new ArrayList<>();
         float contador = 0;
@@ -224,20 +196,30 @@ public class TabFragment extends Fragment {
         }
 
         BarDataSet dataset = new BarDataSet(entries, "Volume value Chart");
-        dataset.setColor(Color.BLUE);
+        //Configure data colors.
+        dataset.setColor(Color.GREEN);
+        dataset.setBarBorderColor(Color.WHITE);
+        dataset.setValueTextColor(Color.WHITE);
+        dataset.setValueTextSize(12);
+
+
         List<IBarDataSet> listBarDatasets = new ArrayList<>();
         listBarDatasets.add(dataset);
         BarData data = new BarData(listBarDatasets);
-        volumeChart.setData(data); // set the data and list of lables into chart<br />
-        // volumeChart.getXAxis().setValueFormatter(new XValueFormatter(labels));
-        volumeChart.animateXY(6000, 6000);
-        volumeChart.invalidate();
+        volumeChart.setData(data);
 
 
+        //Configure Axys Colors
+        volumeChart.getAxisRight().setTextColor(Color.WHITE);
+        volumeChart.getAxisLeft().setTextColor(Color.WHITE);
+        volumeChart.getXAxis().setTextColor(Color.WHITE);
+
+        //Configure Animations and  refresh data.
+        volumeChart.animateXY(9000, 9000);
     }
 
 
-    private void fillLinechart(List<HistoricalQuote> processedData) {
+    private void configureDataLinearMaxMinChart(List<HistoricalQuote> processedData) {
 
         //Retrive the X/Y Axis dataset values.
         List<String> xAxis = generateXAxisValues(processedData);
@@ -285,18 +267,12 @@ public class TabFragment extends Fragment {
             chartStock.getAxisLeft().setTextColor(Color.WHITE);
             chartStock.getAxisRight().setTextColor(Color.WHITE);
 
-
-            chartStock.animateXY(3000, 3000);
-
-
             chartStock.getXAxis().setValueFormatter(new XValueFormatter(xAxis));
 
             //customize contentDescription and chart information
             chartStock.setContentDescription(getString(R.string.a11y_historical_chart, quote.getName()));
-
-            //Refresh the chart
-            chartStock.invalidate();
-
+            //Animate and Refresh the data.
+            chartStock.animateXY(1000, 1000);
 
         }
 
@@ -336,8 +312,8 @@ public class TabFragment extends Fragment {
     private List<List<Entry>> generateYAxisValues(List<HistoricalQuote> data) {
 
         List<List<Entry>> obtainedDataSets = null;
-        List<Entry> valuesYAxisHigh = null;
-        List<Entry> valuesYAxisLow = null;
+        List<Entry> valuesYAxisHigh;
+        List<Entry> valuesYAxisLow;
 
         if (null != data && !data.isEmpty()) {
             int counter = 0;

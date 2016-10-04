@@ -4,7 +4,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
     android:orientation="vertical"
     android:paddingEnd="@dimen/activity_horizontal_margin"
     android:paddingLeft="@dimen/activity_horizontal_margin"
@@ -31,7 +31,7 @@
             <ImageView
                 android:id="@+id/fill"
                 android:layout_width="wrap_content"
-                android:layout_height="40dp"
+                android:layout_height="@dimen/rise_fall_icon_size"
                 android:src="@drawable/stock_rise"
                 android:visibility="invisible" />
 
@@ -81,7 +81,7 @@
         <ImageView
             android:id="@+id/stock_rise_icon"
             android:layout_width="wrap_content"
-            android:layout_height="40dp"
+            android:layout_height="@dimen/rise_fall_icon_size"
             android:src="@drawable/stock_rise" />
 
         <TextView
@@ -128,7 +128,7 @@
         <ImageView
             android:id="@+id/stock_fall_icon"
             android:layout_width="wrap_content"
-            android:layout_height="40dp"
+            android:layout_height="@dimen/rise_fall_icon_size"
             android:src="@drawable/stock_fall" />
 
         <TextView

@@ -7,16 +7,16 @@ import android.content.Context;
 import android.content.OperationApplicationException;
 import android.os.RemoteException;
 import android.util.Log;
+import android.util.Pair;
 
 import com.google.android.gms.gcm.GcmNetworkManager;
 import com.google.android.gms.gcm.GcmTaskService;
 import com.google.android.gms.gcm.TaskParams;
+import com.sam_chordas.android.stockhawk.Utilities.Constants;
+import com.sam_chordas.android.stockhawk.Utilities.Utils;
 import com.sam_chordas.android.stockhawk.data.StockQuoteContract;
 import com.sam_chordas.android.stockhawk.rest.ServiceGenerator;
-import com.sam_chordas.android.stockhawk.rest.Utils;
 import com.sam_chordas.android.stockhawk.rest.client.YahooFinanceAPIClient;
-import com.sam_chordas.android.stockhawk.rest.model.HistoricalQuote;
-import com.sam_chordas.android.stockhawk.rest.model.HistoricalStockQuoteModel;
 import com.sam_chordas.android.stockhawk.rest.model.Quote;
 import com.sam_chordas.android.stockhawk.rest.model.StockQuoteModel;
 
@@ -38,13 +38,14 @@ public class StockTaskService extends GcmTaskService {
 
     private String LOG_TAG = StockTaskService.class.getSimpleName();
 
+
+
     public static final String INIT_PARAM = "init";
 
     public static final String PERIODIC_PARAM = "periodic";
 
     public static final String ADD_PARAM = "add";
 
-    public static final String ONE_WEEK_CRITERIA = "OWC";
 
 
     /**
@@ -83,7 +84,7 @@ public class StockTaskService extends GcmTaskService {
      * @return returns a list of Quotes that match with the criteria.
      * @throws IOException
      */
-    private List<Quote> fetchData(String url) throws IOException {
+    private List<Quote> obtainQuotes(String url) throws IOException {
         Log.d(LOG_TAG, "fetching data from the API.");
         Log.d(LOG_TAG, "QUERY: " + url);
 
@@ -102,23 +103,7 @@ public class StockTaskService extends GcmTaskService {
     }
 
 
-    private List<HistoricalQuote> fetchHistoricalData(String url) throws IOException {
-        Log.d(LOG_TAG, "Fetching historical data from the API.");
-        Log.d(LOG_TAG, "QUERY: " + url);
 
-        List<HistoricalQuote> quoteList = null;
-
-        Call<HistoricalStockQuoteModel> call = yahooClient.getHistorialStockData(url);
-        Response<HistoricalStockQuoteModel> response = call.execute();
-        if (response.isSuccessful()) {
-            Log.d(LOG_TAG, "The request to the REST API bring back " + response.body().query.getCount() + " HistoricalQuotes");
-            quoteList = response.body().query.getResults().getQuote();
-        } else {
-            Log.e(LOG_TAG, "The request to the REST API return an error");
-        }
-
-        return quoteList;
-    }
 
 
     @Override
@@ -133,28 +118,46 @@ public class StockTaskService extends GcmTaskService {
 
         //check if is update
         if (params.getTag().equals(INIT_PARAM) ||
-                params.getTag().equals(PERIODIC_PARAM) ||
-                params.getTag().equals(ADD_PARAM)) {
+                params.getTag().equals(PERIODIC_PARAM)) {
             isUpdate = true;
         }
         //Represents the query to fetch the data from the Yahoo API.
         String queryYQL = Utils.generateQuoteQuery(mContext, params);
         try {
-            List<Quote> fetchedQuotes = fetchData(queryYQL);
+            List<Quote> fetchedQuotes = obtainQuotes(queryYQL);
 
             if (fetchedQuotes != null && !fetchedQuotes.isEmpty()) {
+
+
+                if (params.getTag().equals(ADD_PARAM)) {
+                    isUpdate=false;
+                    Quote quoteToRemove = null;
+                    for (Quote quote : fetchedQuotes) {
+                        if (Constants.FIX_ADD_CALL_STOCK_QUOTE.contains(quote.getSymbol())) {
+                            quoteToRemove = quote;
+                        }
+                    }
+                    fetchedQuotes.remove(quoteToRemove);
+                }
+
                 storeOnDatabase(fetchedQuotes);
 
-                for (Quote itQuote : fetchedQuotes) {
-                    List<HistoricalQuote> historicalQuotes = fetchHistoricalData(Utils.generateHistoricalYQLQuery(itQuote.symbol, ONE_WEEK_CRITERIA));
-                    storeOnDatabase(historicalQuotes, itQuote.id);
-                }
+                obtainHistoricalDataFromQuotes(fetchedQuotes);
             }
         } catch (IOException | RemoteException | OperationApplicationException e) {
             Log.e(LOG_TAG, e.getMessage());
             return GcmNetworkManager.RESULT_FAILURE;
         }
         return GcmNetworkManager.RESULT_SUCCESS;
+    }
+
+    private void obtainHistoricalDataFromQuotes(List<Quote> fetchedQuotes) {
+        List<Pair<String, Integer>> storedIds = new ArrayList<>();
+        for (Quote quote : fetchedQuotes) {
+            storedIds.add(new Pair<>(quote.getSymbol(), quote.id));
+        }
+
+        new HistoricalDataTask(mContext).execute(storedIds);
     }
 
     private void storeOnDatabase(List<Quote> quotes) throws RemoteException, OperationApplicationException {
@@ -185,18 +188,9 @@ public class StockTaskService extends GcmTaskService {
 
     }
 
-    private void storeOnDatabase(List<HistoricalQuote> historicalQuotes, int quoteId) throws RemoteException, OperationApplicationException {
-        ArrayList<ContentProviderOperation> inserts = new ArrayList<>();
 
-        for (HistoricalQuote iterator : historicalQuotes) {
 
-            inserts.add(Utils.buildBatchOperation(iterator, quoteId, mContext));
-        }
 
-        if (!Collections.EMPTY_LIST.equals(inserts)) {
-            //perform a masive bulk insert
-            mContext.getContentResolver().applyBatch(StockQuoteContract.CONTENT_AUTHORITY, inserts);
-        }
-    }
+
 
 }
