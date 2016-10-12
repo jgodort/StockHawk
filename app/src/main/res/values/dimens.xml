@@ -18,7 +18,7 @@
     <dimen name="rise_fall_icon_size">40dp</dimen>
     <dimen name="default_row_height">72dp</dimen>
 
-    <dimen name="linear_chart_height">250dp</dimen>
+    <dimen name="linear_chart_height">210dp</dimen>
 
     <dimen name="bar_chart_height">180dp</dimen>
 </resources>

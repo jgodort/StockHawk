@@ -4,7 +4,7 @@
     android:initialLayout="@layout/widget_stock_small"
     android:minHeight="180dp"
     android:minWidth="300dp"
-    android:previewImage="@drawable/stock_fall"
+    android:previewImage="@drawable/widget_preview_list"
     android:resizeMode="horizontal|vertical"
     android:updatePeriodMillis="0"
     tools:ignore="UnusedAttribute" />

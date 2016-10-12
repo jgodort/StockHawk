@@ -1,7 +1,6 @@
 package com.sam_chordas.android.stockhawk.widget;
 
 import android.app.IntentService;
-import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
 import android.content.Intent;
@@ -10,7 +9,6 @@ import android.widget.RemoteViews;
 
 import com.sam_chordas.android.stockhawk.R;
 import com.sam_chordas.android.stockhawk.data.StockQuoteContract;
-import com.sam_chordas.android.stockhawk.ui.MyStocksActivity;
 
 /**
  * Created by Javier Godino on 29/09/2016.
@@ -75,9 +73,7 @@ public class StockWidgetIntentService extends IntentService {
             views.setTextViewText(R.id.widget_change, widgetChange);
             views.setTextViewText(R.id.widget_stock_name, widgetName);
 
-            Intent launchIntent = new Intent(this, MyStocksActivity.class);
-            PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, launchIntent, 0);
-            views.setOnClickPendingIntent(R.id.widget_Stock_small, pendingIntent);
+
 
             appWidgetManager.updateAppWidget(appWidgetId, views);
         }

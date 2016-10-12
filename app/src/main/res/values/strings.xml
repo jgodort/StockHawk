@@ -14,7 +14,8 @@
     <string name="dailyLabel" translatable="true">Daily</string>
     <string name="yearlyLabel" translatable="true">Yearly</string>
     <string name="rangeLabel" translatable="true">Range</string>
-    <string name="loading_message" translatable="true">Loading Historical Data...</string>
+    <string name="loading_message" translatable="true">Loading Historical Data…</string>
+    <string name="no_data_graph" translatable="true">No data available for the chart.</string>
 
     <string name="tab_label_one_month" translatable="true">1 Month</string>
     <string name="tab_label_three_months" translatable="true">3 Months</string>

@@ -5,14 +5,17 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.text.format.Time;
 import android.util.Log;
+import android.view.View;
 import android.widget.Toast;
 
 import com.google.android.gms.gcm.TaskParams;
+import com.sam_chordas.android.stockhawk.R;
 import com.sam_chordas.android.stockhawk.data.StockQuoteContract;
 import com.sam_chordas.android.stockhawk.rest.model.HistoricalQuote;
 import com.sam_chordas.android.stockhawk.rest.model.Quote;
@@ -54,7 +57,6 @@ public class Utils {
             " where symbol in (";
 
     private static final String SAMPLE_STOCK_QUOTES = "\"YHOO\",\"AAPL\",\"GOOG\",\"MSFT\"";
-
 
 
     public static boolean showPercent = true;
@@ -363,6 +365,36 @@ public class Utils {
         grCal.setTime(date);
         grCal.add(GregorianCalendar.DAY_OF_MONTH, numberOfDays);
         return grCal.getTime();
+    }
+
+
+    /**
+     * Method that given a view and a integer who represent the up/down of the stock price, change the
+     * color of the pill.
+     *
+     * @param view
+     * @param isUpValue
+     * @param context
+     */
+    public static void defineQuotePillColor(View view, int isUpValue, Context context) {
+        int sdk = Build.VERSION.SDK_INT;
+        if (isUpValue == 1) {
+            if (sdk < Build.VERSION_CODES.JELLY_BEAN) {
+                view.setBackgroundDrawable(
+                        context.getResources().getDrawable(R.drawable.percent_change_pill_green));
+            } else {
+                view.setBackground(
+                        context.getResources().getDrawable(R.drawable.percent_change_pill_green));
+            }
+        } else {
+            if (sdk < Build.VERSION_CODES.JELLY_BEAN) {
+                view.setBackgroundDrawable(
+                        context.getResources().getDrawable(R.drawable.percent_change_pill_red));
+            } else {
+                view.setBackground(
+                        context.getResources().getDrawable(R.drawable.percent_change_pill_red));
+            }
+        }
     }
 
 }

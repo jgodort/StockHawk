@@ -73,8 +73,6 @@ public class TabFragment extends Fragment {
     BarChart volumeChart;
 
 
-
-
     List<HistoricalQuote> historicalQuotes;
 
     private ProgressDialog mprogressDialog;
@@ -96,7 +94,7 @@ public class TabFragment extends Fragment {
 
         mprogressDialog = new ProgressDialog(getContext());
 
-        chartStock.setNoDataTextDescription("You need to provide data for the chart.");
+
         chartStock.setOnChartGestureListener(new CustomOnChartGestureListener());
         chartStock.setOnChartValueSelectedListener(new CustomOnChartValueSelectedListener());
 
@@ -105,7 +103,6 @@ public class TabFragment extends Fragment {
         if (null != arguments) {
             criteriaTime = arguments.getString(CRITERIA_TIME_KEY);
             quote = arguments.getParcelable(SELECTED_QUOTE);
-
 
 
             if (ONE_WEEK_CRITERIA.equals(criteriaTime) &&
@@ -185,95 +182,105 @@ public class TabFragment extends Fragment {
 
 
     private void configureDataVolumeChart(List<HistoricalQuote> processedData) {
-        ArrayList<BarEntry> entries = new ArrayList<>();
-        List<String> labels = new ArrayList<>();
-        float contador = 0;
-        for (HistoricalQuote historicalQuote : processedData) {
-            entries.add(new BarEntry(contador++,
-                    Float.valueOf(historicalQuote.getVolume())));
 
-            labels.add(generateLabelDate(historicalQuote));
+        if (null != processedData && !processedData.isEmpty()) {
+            ArrayList<BarEntry> entries = new ArrayList<>();
+            List<String> labels = new ArrayList<>();
+            float contador = 0;
+            for (HistoricalQuote historicalQuote : processedData) {
+                entries.add(new BarEntry(contador++,
+                        Float.valueOf(historicalQuote.getVolume())));
+
+                labels.add(generateLabelDate(historicalQuote));
+            }
+
+            BarDataSet dataset = new BarDataSet(entries, "Volume value Chart");
+            //Configure data colors.
+            dataset.setColor(Color.GREEN);
+            dataset.setBarBorderColor(Color.WHITE);
+            dataset.setValueTextColor(Color.WHITE);
+            dataset.setValueTextSize(12);
+
+
+            List<IBarDataSet> listBarDatasets = new ArrayList<>();
+            listBarDatasets.add(dataset);
+            BarData data = new BarData(listBarDatasets);
+            volumeChart.setData(data);
+
+
+            //Configure Axys Colors
+            volumeChart.getAxisRight().setTextColor(Color.WHITE);
+            volumeChart.getAxisLeft().setTextColor(Color.WHITE);
+            volumeChart.getXAxis().setTextColor(Color.WHITE);
+
+            //Configure Animations and  refresh data.
+            volumeChart.animateXY(3000, 3000);
+        } else {
+            volumeChart.setNoDataText(getString(R.string.no_data_graph));
         }
 
-        BarDataSet dataset = new BarDataSet(entries, "Volume value Chart");
-        //Configure data colors.
-        dataset.setColor(Color.GREEN);
-        dataset.setBarBorderColor(Color.WHITE);
-        dataset.setValueTextColor(Color.WHITE);
-        dataset.setValueTextSize(12);
-
-
-        List<IBarDataSet> listBarDatasets = new ArrayList<>();
-        listBarDatasets.add(dataset);
-        BarData data = new BarData(listBarDatasets);
-        volumeChart.setData(data);
-
-
-        //Configure Axys Colors
-        volumeChart.getAxisRight().setTextColor(Color.WHITE);
-        volumeChart.getAxisLeft().setTextColor(Color.WHITE);
-        volumeChart.getXAxis().setTextColor(Color.WHITE);
-
-        //Configure Animations and  refresh data.
-        volumeChart.animateXY(9000, 9000);
     }
 
 
     private void configureDataLinearMaxMinChart(List<HistoricalQuote> processedData) {
 
-        //Retrive the X/Y Axis dataset values.
-        List<String> xAxis = generateXAxisValues(processedData);
-        List<List<Entry>> yAxis = generateYAxisValues(processedData);
+        if (null != processedData && !processedData.isEmpty()) {
+            //Retrive the X/Y Axis dataset values.
+            List<String> xAxis = generateXAxisValues(processedData);
+            List<List<Entry>> yAxis = generateYAxisValues(processedData);
 
-        if (null != xAxis && null != yAxis) {
-            LineDataSet datasetHigh;
-            LineDataSet datasetLow;
+            if (null != xAxis && null != yAxis) {
+                LineDataSet datasetHigh;
+                LineDataSet datasetLow;
 
-            //Configuring High values Dataset
-            datasetHigh = new LineDataSet(yAxis.get(0), "High Value");
-            datasetHigh.setColor(Color.GREEN);
-            datasetHigh.setCircleColor(Color.BLUE);
-            datasetHigh.setFillColor(Color.GREEN);
-            datasetHigh.setDrawFilled(true);
-            datasetHigh.setValueTextColor(Color.WHITE);
-            datasetHigh.setValueTextSize(12);
+                //Configuring High values Dataset
+                datasetHigh = new LineDataSet(yAxis.get(0), "High Value");
+                datasetHigh.setColor(Color.GREEN);
+                datasetHigh.setCircleColor(Color.BLUE);
+                datasetHigh.setFillColor(Color.GREEN);
+                datasetHigh.setDrawFilled(true);
+                datasetHigh.setValueTextColor(Color.WHITE);
+                datasetHigh.setValueTextSize(12);
 
-            //Configuring Low Values Dataset.
-            datasetLow = new LineDataSet(yAxis.get(1), "Low Value");
-            datasetLow.setColor(Color.RED);
-            datasetLow.setCircleColor(Color.BLUE);
-            datasetLow.setFillColor(Color.RED);
-            datasetLow.setDrawFilled(true);
-            datasetLow.setValueTextColor(Color.WHITE);
-            datasetLow.setValueTextSize(12);
+                //Configuring Low Values Dataset.
+                datasetLow = new LineDataSet(yAxis.get(1), "Low Value");
+                datasetLow.setColor(Color.RED);
+                datasetLow.setCircleColor(Color.BLUE);
+                datasetLow.setFillColor(Color.RED);
+                datasetLow.setDrawFilled(true);
+                datasetLow.setValueTextColor(Color.WHITE);
+                datasetLow.setValueTextSize(12);
 
 
-            //Create a list to group datasets.
-            ArrayList<ILineDataSet> dataSets = new ArrayList<>();
-            dataSets.add(datasetHigh);
-            dataSets.add(datasetLow);
+                //Create a list to group datasets.
+                ArrayList<ILineDataSet> dataSets = new ArrayList<>();
+                dataSets.add(datasetHigh);
+                dataSets.add(datasetLow);
 
-            //Create a data object with the datasets
-            LineData data = new LineData(dataSets);
-            chartStock.setData(data);
+                //Create a data object with the datasets
+                LineData data = new LineData(dataSets);
+                chartStock.setData(data);
 
-            //Configure Legend
-            Legend legend = chartStock.getLegend();
-            legend.setTextColor(Color.WHITE);
-            legend.setTextSize(15);
+                //Configure Legend
+                Legend legend = chartStock.getLegend();
+                legend.setTextColor(Color.WHITE);
+                legend.setTextSize(15);
 
-            //Configure axys
-            chartStock.getXAxis().setTextColor(Color.WHITE);
-            chartStock.getAxisLeft().setTextColor(Color.WHITE);
-            chartStock.getAxisRight().setTextColor(Color.WHITE);
+                //Configure axys
+                chartStock.getXAxis().setTextColor(Color.WHITE);
+                chartStock.getAxisLeft().setTextColor(Color.WHITE);
+                chartStock.getAxisRight().setTextColor(Color.WHITE);
 
-            chartStock.getXAxis().setValueFormatter(new XValueFormatter(xAxis));
+                chartStock.getXAxis().setValueFormatter(new XValueFormatter(xAxis));
 
-            //customize contentDescription and chart information
-            chartStock.setContentDescription(getString(R.string.a11y_historical_chart, quote.getName()));
-            //Animate and Refresh the data.
-            chartStock.animateXY(1000, 1000);
+                //customize contentDescription and chart information
+                chartStock.setContentDescription(getString(R.string.a11y_historical_chart, quote.getName()));
+                //Animate and Refresh the data.
+                chartStock.animateXY(3000, 3000);
 
+            }
+        } else {
+            chartStock.setNoDataTextDescription(getString(R.string.no_data_graph));
         }
 
     }
