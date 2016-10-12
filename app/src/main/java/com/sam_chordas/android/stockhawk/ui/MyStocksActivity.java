@@ -180,7 +180,7 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
                                     } else {
                                         // Add the stock to DB
                                         mServiceIntent.putExtra(Constants.TAG_KEY, StockTaskService.ADD_PARAM);
-                                        mServiceIntent.putExtra(Constants.SYMBOL_KEY, input.toString());
+                                        mServiceIntent.putExtra(Constants.SYMBOL_KEY, input.toString().toUpperCase());
                                         startService(mServiceIntent);
                                     }
                                 }
