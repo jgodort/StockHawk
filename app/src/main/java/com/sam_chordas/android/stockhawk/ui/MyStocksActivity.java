@@ -1,5 +1,6 @@
 package com.sam_chordas.android.stockhawk.ui;
 
+import android.app.Dialog;
 import android.app.LoaderManager;
 import android.content.Context;
 import android.content.CursorLoader;
@@ -10,6 +11,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.os.Parcelable;
+import android.support.annotation.NonNull;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -154,38 +156,23 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (checkInternetConnectionAvailable()) {
-                    new MaterialDialog.Builder(mContext).title(R.string.symbol_search)
-                            .content(R.string.content_test)
-                            .inputType(InputType.TYPE_CLASS_TEXT)
-                            .input(R.string.input_hint, R.string.input_prefill, new MaterialDialog.InputCallback() {
-                                @Override
-                                public void onInput(MaterialDialog dialog, CharSequence input) {
 
-                                    // On FAB click, receive user input. Make sure the stock doesn't already exist
-                                    // in the DB and proceed accordingly
-                                    Cursor c = getContentResolver().query(
-                                            StockQuoteContract.StockQuoteEntry.buildStockQuoteSymbolUri(input.toString().toUpperCase()),
-                                            new String[]{"DISTINCT " + StockQuoteContract.StockQuoteEntry.TABLE_NAME + "." + StockQuoteContract.StockQuoteEntry.COLUMN_SYMBOL},
-                                            StockQuoteProvider.sStockQuoteSelection,
-                                            null,
-                                            null);
-                                    if (c.getCount() != 0) {
-                                        Toast toast =
-                                                Toast.makeText(MyStocksActivity.this, "This stock is already saved!",
-                                                        Toast.LENGTH_LONG);
-                                        toast.setGravity(Gravity.CENTER, Gravity.CENTER, 0);
-                                        toast.show();
-                                        return;
-                                    } else {
-                                        // Add the stock to DB
-                                        mServiceIntent.putExtra(Constants.TAG_KEY, StockTaskService.ADD_PARAM);
-                                        mServiceIntent.putExtra(Constants.SYMBOL_KEY, input.toString().toUpperCase());
-                                        startService(mServiceIntent);
-                                    }
-                                }
-                            })
-                            .show();
+
+                if (checkInternetConnectionAvailable()) {
+
+                    Dialog mDialog = new MaterialDialog.Builder(mContext).title(R.string.symbol_search)
+                            .inputType(InputType.TYPE_CLASS_TEXT)
+                            .autoDismiss(true)
+                            .positiveText(R.string.add)
+                            .negativeText(R.string.disagree)
+                            .input(R.string.input_hint, R.string.input_prefill, false,
+                                    new MaterialDialog.InputCallback() {
+                                        @Override
+                                        public void onInput(@NonNull MaterialDialog dialog, CharSequence input) {
+                                            addQuote(input);
+                                        }
+                                    }).build();
+                    mDialog.show();
                 } else {
                     networkToast();
                 }
@@ -203,6 +190,30 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
         }
 
         Log.d(LOG_TAG, "onCreate: end");
+    }
+
+    private void addQuote(CharSequence input) {
+        // On FAB click, receive user input. Make sure the stock doesn't already exist
+        // in the DB and proceed accordingly
+        Cursor c = getContentResolver().query(
+                StockQuoteContract.StockQuoteEntry.buildStockQuoteSymbolUri(input.toString().toUpperCase()),
+                new String[]{"DISTINCT " + StockQuoteContract.StockQuoteEntry.TABLE_NAME + "." + StockQuoteContract.StockQuoteEntry.COLUMN_SYMBOL},
+                StockQuoteProvider.sStockQuoteSelection,
+                null,
+                null);
+        if (c.getCount() != 0) {
+            Toast toast =
+                    Toast.makeText(MyStocksActivity.this, "This stock is already saved!",
+                            Toast.LENGTH_LONG);
+            toast.setGravity(Gravity.CENTER, Gravity.CENTER, 0);
+            toast.show();
+            return;
+        } else {
+            // Add the stock to DB
+            mServiceIntent.putExtra(Constants.TAG_KEY, StockTaskService.ADD_PARAM);
+            mServiceIntent.putExtra(Constants.SYMBOL_KEY, input.toString().toUpperCase());
+            startService(mServiceIntent);
+        }
     }
 
     private void prepareDetailIntentData(int position) {

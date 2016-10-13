@@ -32,6 +32,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="@dimen/activity_horizontal_margin"
+        android:contentDescription="@string/a11y_add_quote_button"
         android:paddingEnd="@dimen/activity_horizontal_margin"
         android:paddingLeft="@dimen/activity_horizontal_margin"
         android:paddingRight="@dimen/activity_horizontal_margin"

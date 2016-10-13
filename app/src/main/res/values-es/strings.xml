@@ -28,5 +28,13 @@
     <string name="a11y_decrease_icon">Icono Decremento:</string>
     <string name="a11y_company_name">Compañía: <xliff:g id="cn">%1$s</xliff:g></string>
     <string name="a11y_stock_symbol">Simbolo Acción: <xliff:g id="ssym">%1$s</xliff:g></string>
+    <string name="a11y_historical_chart">Grafico Historico  <xliff:g id="hgq">%1$s</xliff:g></string>
+    <string name="action_settings">Opciones</string>
+    <string name="loading_message">Cargando historial…</string>
+    <string name="no_data_graph">No hay informacion disponible para la grafica.</string>
+    <string name="existing_quote">La acción ya existe!.</string>
+    <string name="add">Añadir</string>
+    <string name="disagree">Cancelar</string>
+    <string name="a11y_add_quote_button">Boton Añadir Acción</string>
 
 </resources>
